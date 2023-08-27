@@ -10,18 +10,21 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/Snawoot/dtlspipe/util"
 )
 
 const (
 	ProgName = "dtlspipe"
+	PSKEnvVarKey = "DTLSPIPE_PSK"
 )
-
 var (
 	version = "undefined"
 
 	timeout   = flag.Duration("timeout", 10*time.Second, "network operation timeout")
 	idleTime  = flag.Duration("idle-time", 90*time.Second, "max idle time for UDP session")
-	passwdOpt = flag.String("password", "", "password used to derive PSK key")
+	pskHexOpt = flag.String("psk", "", "hex-encoded pre-shared key. Can be generated with `genpsk` subcommand")
+	keyLength = flag.Uint("key-length", 16, "generate key with specified length")
 )
 
 func usage() {
@@ -30,10 +33,26 @@ func usage() {
 	fmt.Fprintln(out)
 	fmt.Fprintf(out, "%s [OPTION]... server <BIND ADDRESS> <REMOTE ADDRESS>\n", ProgName)
 	fmt.Fprintf(out, "%s [OPTION]... client <BIND ADDRESS> <REMOTE ADDRESS>\n", ProgName)
+	fmt.Fprintf(out, "%s [OPTION]... genpsk\n", ProgName)
 	fmt.Fprintf(out, "%s version\n", ProgName)
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Options:")
 	flag.PrintDefaults()
+}
+
+func cmdGenPSK() int {
+	if *keyLength > 64 {
+		fmt.Fprintln(os.Stderr, "key length is too big")
+		return 1
+	}
+	psk, err := util.GenPSKHex(int(*keyLength))
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "key generation error: %v\n", err)
+		return 1
+	}
+
+	fmt.Println(psk)
+	return 0
 }
 
 func cmdVersion() int {
@@ -41,8 +60,8 @@ func cmdVersion() int {
 	return 0
 }
 
-func cmdClient(bindAddress, remoteAddress, password string) int {
-	log.Printf("starting dtlspipe client: %s => %s", bindAddress, remoteAddress)
+func cmdClient(bindAddress, remoteAddress string, psk []byte) int {
+	log.Printf("starting dtlspipe client: %s =[wrap into DTLS]=> %s", bindAddress, remoteAddress)
 	defer log.Println("dtlspipe client stopped")
 
 	appCtx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -53,8 +72,8 @@ func cmdClient(bindAddress, remoteAddress, password string) int {
 	return 0
 }
 
-func cmdServer(bindAddress, remoteAddress, password string) int {
-	log.Printf("starting dtlspipe server: %s => %s", bindAddress, remoteAddress)
+func cmdServer(bindAddress, remoteAddress string, psk []byte) int {
+	log.Printf("starting dtlspipe server: %s =[unwrap from DTLS]=> %s", bindAddress, remoteAddress)
 	defer log.Println("dtlspipe server stopped")
 
 	appCtx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
@@ -69,32 +88,39 @@ func run() int {
 	flag.Parse()
 	args := flag.Args()
 
-	passwd := os.Getenv("PSK_PASSWD")
-	if passwd == "" {
-		os.Unsetenv("PSK_PASSWD")
-	}
-	if *passwdOpt != "" {
-		passwd = *passwdOpt
-	}
-	if passwd == "" {
-		fmt.Fprintln(os.Stderr)
-		fmt.Fprintln(os.Stderr, "Error: no password option provided and neither PSK_PASSWD environment variable is set")
-		fmt.Fprintln(os.Stderr)
-		return 2
-	}
-
 	switch len(args) {
 	case 1:
 		switch args[0] {
+		case "genpsk":
+			return cmdGenPSK()
 		case "version":
 			return cmdVersion()
 		}
 	case 3:
+		pskHex := os.Getenv(PSKEnvVarKey)
+		if pskHex == "" {
+			os.Unsetenv(PSKEnvVarKey)
+		}
+		if *pskHexOpt != "" {
+			pskHex = *pskHexOpt
+		}
+		if pskHex == "" {
+			fmt.Fprintln(os.Stderr)
+			fmt.Fprintf(os.Stderr, "Error: no PSK option provided and neither %s environment variable is set\n", PSKEnvVarKey)
+			fmt.Fprintln(os.Stderr)
+			return 2
+		}
+
+		psk, err := util.PSKFromHex(pskHex)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error: can't hex-decode PSK: %v\n", err)
+			return 2
+		}
 		switch args[0] {
 		case "server":
-			return cmdServer(args[1], args[2], passwd)
+			return cmdServer(args[1], args[2], psk)
 		case "client":
-			return cmdServer(args[1], args[2], passwd)
+			return cmdClient(args[1], args[2], psk)
 		}
 	}
 	usage()
