@@ -11,13 +11,15 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Snawoot/dtlspipe/server"
 	"github.com/Snawoot/dtlspipe/util"
 )
 
 const (
-	ProgName = "dtlspipe"
+	ProgName     = "dtlspipe"
 	PSKEnvVarKey = "DTLSPIPE_PSK"
 )
+
 var (
 	version = "undefined"
 
@@ -78,6 +80,21 @@ func cmdServer(bindAddress, remoteAddress string, psk []byte) int {
 
 	appCtx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
+
+	cfg := server.Config{
+		BindAddress:   bindAddress,
+		RemoteAddress: remoteAddress,
+		PSK:           psk,
+		Timeout:       *timeout,
+		IdleTimeout:   *idleTime,
+		BaseContext:   appCtx,
+	}
+
+	srv, err := server.New(&cfg)
+	if err != nil {
+		log.Fatalf("server startup failed: %v", err)
+	}
+	defer srv.Close()
 
 	<-appCtx.Done()
 	return 0

@@ -8,7 +8,7 @@ import (
 type Config struct {
 	BindAddress   string
 	RemoteAddress string
-	Password      string
+	PSK           []byte
 	Timeout       time.Duration
 	IdleTimeout   time.Duration
 	BaseContext   context.Context
