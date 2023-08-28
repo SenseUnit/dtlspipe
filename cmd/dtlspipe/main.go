@@ -11,6 +11,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Snawoot/dtlspipe/client"
 	"github.com/Snawoot/dtlspipe/keystore"
 	"github.com/Snawoot/dtlspipe/server"
 	"github.com/Snawoot/dtlspipe/util"
@@ -28,6 +29,7 @@ var (
 	idleTime  = flag.Duration("idle-time", 90*time.Second, "max idle time for UDP session")
 	pskHexOpt = flag.String("psk", "", "hex-encoded pre-shared key. Can be generated with genpsk subcommand")
 	keyLength = flag.Uint("key-length", 16, "generate key with specified length")
+	identity  = flag.String("identity", "", "client identity sent to server")
 )
 
 func usage() {
@@ -64,7 +66,7 @@ func cmdVersion() int {
 }
 
 func cmdClient(bindAddress, remoteAddress string) int {
-	_, err := simpleGetPSK()
+	psk, err := simpleGetPSK()
 	if err != nil {
 		log.Printf("can't get PSK: %v", err)
 		return 2
@@ -74,6 +76,22 @@ func cmdClient(bindAddress, remoteAddress string) int {
 
 	appCtx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
+
+	cfg := client.Config{
+		BindAddress:   bindAddress,
+		RemoteAddress: remoteAddress,
+		PSKCallback:   keystore.NewStaticKeystore(psk).PSKCallback,
+		PSKIdentity:   *identity,
+		Timeout:       *timeout,
+		IdleTimeout:   *idleTime,
+		BaseContext:   appCtx,
+	}
+
+	clt, err := client.New(&cfg)
+	if err != nil {
+		log.Fatalf("client startup failed: %v", err)
+	}
+	defer clt.Close()
 
 	<-appCtx.Done()
 

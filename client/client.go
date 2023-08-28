@@ -1,4 +1,4 @@
-package server
+package client
 
 import (
 	"context"
@@ -10,12 +10,14 @@ import (
 
 	"github.com/Snawoot/dtlspipe/util"
 	"github.com/pion/dtls/v2"
-	"github.com/pion/dtls/v2/pkg/protocol"
-	"github.com/pion/dtls/v2/pkg/protocol/recordlayer"
 	"github.com/pion/transport/v2/udp"
 )
 
-type Server struct {
+const (
+	MaxPktBuf = 4096
+)
+
+type Client struct {
 	listener    net.Listener
 	dtlsConfig  *dtls.Config
 	rAddr       string
@@ -26,12 +28,12 @@ type Server struct {
 	cancelCtx   func()
 }
 
-func New(cfg *Config) (*Server, error) {
+func New(cfg *Config) (*Client, error) {
 	cfg = cfg.populateDefaults()
 
 	baseCtx, cancelCtx := context.WithCancel(cfg.BaseContext)
 
-	srv := &Server{
+	client := &Client{
 		rAddr:       cfg.RemoteAddress,
 		timeout:     cfg.Timeout,
 		psk:         cfg.PSKCallback,
@@ -46,7 +48,7 @@ func New(cfg *Config) (*Server, error) {
 		return nil, fmt.Errorf("can't parse bind address: %w", err)
 	}
 
-	srv.dtlsConfig = &dtls.Config{
+	client.dtlsConfig = &dtls.Config{
 		CipherSuites: []dtls.CipherSuiteID{
 			dtls.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
 			dtls.TLS_PSK_WITH_AES_128_CCM,
@@ -56,77 +58,65 @@ func New(cfg *Config) (*Server, error) {
 			dtls.TLS_PSK_WITH_AES_128_CBC_SHA256,
 		},
 		ExtendedMasterSecret: dtls.RequireExtendedMasterSecret,
-		ConnectContextMaker:  srv.contextMaker,
-		PSK:                  srv.psk,
+		ConnectContextMaker:  client.contextMaker,
+		PSK:                  client.psk,
+		PSKIdentityHint:      []byte(cfg.PSKIdentity),
 	}
-	lc := udp.ListenConfig{
-		AcceptFilter: func(packet []byte) bool {
-			pkts, err := recordlayer.UnpackDatagram(packet)
-			if err != nil || len(pkts) < 1 {
-				return false
-			}
-			h := &recordlayer.Header{}
-			if err := h.Unmarshal(pkts[0]); err != nil {
-				return false
-			}
-			return h.ContentType == protocol.ContentTypeHandshake
-		},
-	}
+	lc := udp.ListenConfig{}
 	listener, err := lc.Listen("udp", net.UDPAddrFromAddrPort(lAddrPort))
 	if err != nil {
 		cancelCtx()
-		return nil, fmt.Errorf("server listen failed: %w", err)
+		return nil, fmt.Errorf("client listen failed: %w", err)
 	}
 
-	srv.listener = listener
+	client.listener = listener
 
-	go srv.listen()
+	go client.listen()
 
-	return srv, nil
+	return client, nil
 }
 
-func (srv *Server) listen() {
-	defer srv.Close()
-	for srv.baseCtx.Err() == nil {
-		conn, err := srv.listener.Accept()
+func (client *Client) listen() {
+	defer client.Close()
+	for client.baseCtx.Err() == nil {
+		conn, err := client.listener.Accept()
 		if err != nil {
 			log.Printf("conn accept failed: %v", err)
 			continue
 		}
 
-		go func(conn net.Conn) {
-			conn, err := dtls.Server(conn, srv.dtlsConfig)
-			if err != nil {
-				log.Printf("DTLS accept error: %v", err)
-				return
-			}
-			srv.serve(conn)
-		}(conn)
+		go client.serve(conn)
 	}
 }
 
-func (srv *Server) serve(conn net.Conn) {
+func (client *Client) serve(conn net.Conn) {
 	log.Printf("[+] conn %s <=> %s", conn.LocalAddr(), conn.RemoteAddr())
 	defer log.Printf("[-] conn %s <=> %s", conn.LocalAddr(), conn.RemoteAddr())
 	defer conn.Close()
 
-	dialCtx, cancel := context.WithTimeout(srv.baseCtx, srv.timeout)
+	dialCtx, cancel := context.WithTimeout(client.baseCtx, client.timeout)
 	defer cancel()
-	remoteConn, err := (&net.Dialer{}).DialContext(dialCtx, "udp", srv.rAddr)
+	remoteConn, err := (&net.Dialer{}).DialContext(dialCtx, "udp", client.rAddr)
 	if err != nil {
 		log.Printf("remote dial failed: %v", err)
 		return
 	}
 	defer remoteConn.Close()
 
-	util.PairConn(conn, remoteConn, srv.idleTimeout)
+	remoteConn, err = dtls.ClientWithContext(dialCtx, remoteConn, client.dtlsConfig)
+	if err != nil {
+		log.Printf("DTL handshake with remote server failed: %v", err)
+		return
+	}
+
+	util.PairConn(conn, remoteConn, client.idleTimeout)
 }
 
-func (srv *Server) contextMaker() (context.Context, func()) {
-	return context.WithTimeout(srv.baseCtx, srv.timeout)
+func (client *Client) contextMaker() (context.Context, func()) {
+	return context.WithTimeout(client.baseCtx, client.timeout)
 }
 
-func (srv *Server) Close() error {
-	srv.cancelCtx()
-	return srv.listener.Close()
+func (client *Client) Close() error {
+	client.cancelCtx()
+	return client.listener.Close()
 }
