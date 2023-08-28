@@ -95,11 +95,13 @@ func (srv *Server) listen() {
 		}
 
 		go func(conn net.Conn) {
+			defer conn.Close()
 			conn, err := dtls.Server(conn, srv.dtlsConfig)
 			if err != nil {
 				log.Printf("DTLS accept error: %v", err)
 				return
 			}
+			defer conn.Close()
 			srv.serve(conn)
 		}(conn)
 	}

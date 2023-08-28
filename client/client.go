@@ -85,7 +85,10 @@ func (client *Client) listen() {
 			continue
 		}
 
-		go client.serve(conn)
+		go func(conn net.Conn) {
+			defer conn.Close()
+			client.serve(conn)
+		}(conn)
 	}
 }
 
