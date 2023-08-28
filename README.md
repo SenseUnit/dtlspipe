@@ -12,11 +12,11 @@ Generic DTLS wrapper for UDP sessions. Like `stunnel`, but for UDP. Suitable for
 
 ## Installation
 
-#### Binaries
+### Binaries
 
 Pre-built binaries are available [here](https://github.com/Snawoot/dtlspipe/releases/latest).
 
-#### Build from source
+### Build from source
 
 Alternatively, you may install dtlspipe from source. Run the following command within the source directory:
 
