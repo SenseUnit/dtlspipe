@@ -24,7 +24,7 @@ type Server struct {
 	listener    net.Listener
 	dtlsConfig  *dtls.Config
 	rAddr       string
-	psk         []byte
+	psk         func([]byte) ([]byte, error)
 	timeout     time.Duration
 	idleTimeout time.Duration
 	baseCtx     context.Context
@@ -39,7 +39,7 @@ func New(cfg *Config) (*Server, error) {
 	srv := &Server{
 		rAddr:       cfg.RemoteAddress,
 		timeout:     cfg.Timeout,
-		psk:         cfg.PSK,
+		psk:         cfg.PSKCallback,
 		idleTimeout: cfg.IdleTimeout,
 		baseCtx:     baseCtx,
 		cancelCtx:   cancelCtx,
@@ -62,7 +62,7 @@ func New(cfg *Config) (*Server, error) {
 		},
 		ExtendedMasterSecret: dtls.RequireExtendedMasterSecret,
 		ConnectContextMaker:  srv.contextMaker,
-		PSK:                  srv.getPSK,
+		PSK:                  srv.psk,
 	}
 	lc := udp.ListenConfig{
 		AcceptFilter: func(packet []byte) bool {
@@ -174,10 +174,6 @@ func (srv *Server) serve(conn net.Conn) {
 
 func (srv *Server) contextMaker() (context.Context, func()) {
 	return context.WithTimeout(srv.baseCtx, srv.timeout)
-}
-
-func (srv *Server) getPSK(hint []byte) ([]byte, error) {
-	return srv.psk, nil
 }
 
 func (srv *Server) Close() error {

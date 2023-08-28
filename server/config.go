@@ -8,10 +8,10 @@ import (
 type Config struct {
 	BindAddress   string
 	RemoteAddress string
-	PSK           []byte
 	Timeout       time.Duration
 	IdleTimeout   time.Duration
 	BaseContext   context.Context
+	PSKCallback   func([]byte) ([]byte, error)
 }
 
 func (cfg *Config) populateDefaults() *Config {
