@@ -1,6 +1,6 @@
 # dtlspipe
 
-Generic DTLS wrapper for UDP sessions. Suitable for wrapping Wireguard or UDP OpenVPN or any other connection-oriented UDP sessions.
+Generic DTLS wrapper for UDP sessions. Like `stunnel`, but for UDP. Suitable for wrapping Wireguard or UDP OpenVPN or any other connection-oriented UDP sessions.
 
 "Client" receives plaintest UDP traffic and forwards it to "Server" via encrypted DTLS connection. "Server" listens UDP port and accepts encrypted DTLS sessions, forwarding messages from each session as a separate UDP connection to plaintext UDP port.
 
