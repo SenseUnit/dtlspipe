@@ -6,7 +6,7 @@ Generic DTLS wrapper for UDP sessions. Like `stunnel`, but for UDP. Suitable for
 
 ## Features
 
-* Cross-platform (Windows/Mac OS/Linux/Android (via shell)/\*BSD)
+* Cross-platform (Windows/Mac OS/Linux/Android/\*BSD)
 * Uses proven DTLS crypto for secure datagram tunneling
 * Simple configuration: just pre-shared key, listen address and forward address.
 
@@ -23,6 +23,32 @@ Alternatively, you may install dtlspipe from source. Run the following command w
 ```
 make install
 ```
+
+## Usage
+
+### Generic case
+
+Let's assume you have following setup: you have server with public IP address 203.0.113.11, running some UDP service on port 514. You want to access this service securely and have UDP datagrams between you and this service encrypted and authenticated.
+
+1. Generate pre-shared key with command `dtlspipe genpsk`
+2. Run dtlspipe-server on server machine: `dtlspipe -psk xxxxxxxxxxxx server 0.0.0.0:2815 127.0.0.1:514`
+3. Run dtlspipe-client on your machine: `dtlspipe -psk xxxxxxxxxxxx client 127.0.0.1:2816 203.0.113.11:2815`
+4. Use address `127.0.0.1:2816` instead of `203.0.113.11:514` for communication with the service.
+
+Few notes:
+
+* You may use any ports instead of 2815 and 2816.
+* Use of localhost address `127.0.0.1` for port bind is optional too and used in example to restrict port access from localhost only. Use `0.0.0.0` to allow network access from outside.
+* PSK can be also specified via `DTLSPIPE_PSK` environment variable.
+
+### Wireguard
+
+dtlspipe setup can be done using example for generic case, but dtlspipe server should point to the wireguard port.
+
+But you also need to make following adjustments to wireguard client config:
+
+1. Use bind address of the dtlspipe client as endpoint for wireguard connection.
+2. Exclude dtlspipe server address from `AllowedIPs` in the wireguard client config. [This calculator](https://www.procustodibus.com/blog/2021/03/wireguard-allowedips-calculator/) may help you. Example for server address `203.0.113.11`: `AllowedIPs = 0.0.0.0/1, 128.0.0.0/2, 192.0.0.0/5, 200.0.0.0/7, 202.0.0.0/8, 203.0.0.0/18, 203.0.64.0/19, 203.0.96.0/20, 203.0.112.0/24, 203.0.113.0/29, 203.0.113.8/31, 203.0.113.10/32, 203.0.113.12/30, 203.0.113.16/28, 203.0.113.32/27, 203.0.113.64/26, 203.0.113.128/25, 203.0.114.0/23, 203.0.116.0/22, 203.0.120.0/21, 203.0.128.0/17, 203.1.0.0/16, 203.2.0.0/15, 203.4.0.0/14, 203.8.0.0/13, 203.16.0.0/12, 203.32.0.0/11, 203.64.0.0/10, 203.128.0.0/9, 204.0.0.0/6, 208.0.0.0/4, 224.0.0.0/3, ::/0`
 
 ## Synopsis
 
