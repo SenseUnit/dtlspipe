@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"runtime/pprof"
 	"strings"
 	"syscall"
 	"time"
@@ -25,12 +26,13 @@ const (
 var (
 	version = "undefined"
 
-	timeout   = flag.Duration("timeout", 10*time.Second, "network operation timeout")
-	idleTime  = flag.Duration("idle-time", 90*time.Second, "max idle time for UDP session")
-	pskHexOpt = flag.String("psk", "", "hex-encoded pre-shared key. Can be generated with genpsk subcommand")
-	keyLength = flag.Uint("key-length", 16, "generate key with specified length")
-	identity  = flag.String("identity", "", "client identity sent to server")
-	mtu       = flag.Int("mtu", 1400, "MTU used for DTLS fragments")
+	timeout    = flag.Duration("timeout", 10*time.Second, "network operation timeout")
+	idleTime   = flag.Duration("idle-time", 90*time.Second, "max idle time for UDP session")
+	pskHexOpt  = flag.String("psk", "", "hex-encoded pre-shared key. Can be generated with genpsk subcommand")
+	keyLength  = flag.Uint("key-length", 16, "generate key with specified length")
+	identity   = flag.String("identity", "", "client identity sent to server")
+	mtu        = flag.Int("mtu", 1400, "MTU used for DTLS fragments")
+	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 )
 
 func usage() {
@@ -136,6 +138,15 @@ func run() int {
 	flag.CommandLine.Usage = usage
 	flag.Parse()
 	args := flag.Args()
+
+	if *cpuprofile != "" {
+		f, err := os.Create(*cpuprofile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 
 	switch len(args) {
 	case 1:
