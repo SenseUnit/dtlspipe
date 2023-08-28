@@ -12,6 +12,7 @@ type Config struct {
 	IdleTimeout   time.Duration
 	BaseContext   context.Context
 	PSKCallback   func([]byte) ([]byte, error)
+	MTU           int
 }
 
 func (cfg *Config) populateDefaults() *Config {

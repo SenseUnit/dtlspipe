@@ -13,6 +13,7 @@ type Config struct {
 	BaseContext   context.Context
 	PSKCallback   func([]byte) ([]byte, error)
 	PSKIdentity   string
+	MTU           int
 }
 
 func (cfg *Config) populateDefaults() *Config {

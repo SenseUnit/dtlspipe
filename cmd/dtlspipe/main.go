@@ -30,6 +30,7 @@ var (
 	pskHexOpt = flag.String("psk", "", "hex-encoded pre-shared key. Can be generated with genpsk subcommand")
 	keyLength = flag.Uint("key-length", 16, "generate key with specified length")
 	identity  = flag.String("identity", "", "client identity sent to server")
+	mtu       = flag.Int("mtu", 1400, "MTU used for DTLS fragments")
 )
 
 func usage() {
@@ -85,6 +86,7 @@ func cmdClient(bindAddress, remoteAddress string) int {
 		Timeout:       *timeout,
 		IdleTimeout:   *idleTime,
 		BaseContext:   appCtx,
+		MTU:           *mtu,
 	}
 
 	clt, err := client.New(&cfg)
@@ -117,6 +119,7 @@ func cmdServer(bindAddress, remoteAddress string) int {
 		Timeout:       *timeout,
 		IdleTimeout:   *idleTime,
 		BaseContext:   appCtx,
+		MTU:           *mtu,
 	}
 
 	srv, err := server.New(&cfg)

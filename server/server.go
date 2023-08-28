@@ -15,6 +15,10 @@ import (
 	"github.com/pion/transport/v2/udp"
 )
 
+const (
+	Backlog = 1024
+)
+
 type Server struct {
 	listener    net.Listener
 	dtlsConfig  *dtls.Config
@@ -58,6 +62,7 @@ func New(cfg *Config) (*Server, error) {
 		ExtendedMasterSecret: dtls.RequireExtendedMasterSecret,
 		ConnectContextMaker:  srv.contextMaker,
 		PSK:                  srv.psk,
+		MTU:                  cfg.MTU,
 	}
 	lc := udp.ListenConfig{
 		AcceptFilter: func(packet []byte) bool {
@@ -71,6 +76,7 @@ func New(cfg *Config) (*Server, error) {
 			}
 			return h.ContentType == protocol.ContentTypeHandshake
 		},
+		Backlog: Backlog,
 	}
 	listener, err := lc.Listen("udp", net.UDPAddrFromAddrPort(lAddrPort))
 	if err != nil {

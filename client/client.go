@@ -15,6 +15,7 @@ import (
 
 const (
 	MaxPktBuf = 4096
+	Backlog   = 1024
 )
 
 type Client struct {
@@ -61,8 +62,11 @@ func New(cfg *Config) (*Client, error) {
 		ConnectContextMaker:  client.contextMaker,
 		PSK:                  client.psk,
 		PSKIdentityHint:      []byte(cfg.PSKIdentity),
+		MTU:                  cfg.MTU,
 	}
-	lc := udp.ListenConfig{}
+	lc := udp.ListenConfig{
+		Backlog: Backlog,
+	}
 	listener, err := lc.Listen("udp", net.UDPAddrFromAddrPort(lAddrPort))
 	if err != nil {
 		cancelCtx()

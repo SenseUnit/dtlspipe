@@ -13,5 +13,5 @@ func NewStaticKeystore(psk []byte) *StaticKeystore {
 }
 
 func (store *StaticKeystore) PSKCallback(hint []byte) ([]byte, error) {
-	return bytes.Clone(store.psk), nil
+	return store.psk, nil
 }
