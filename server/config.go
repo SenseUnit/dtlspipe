@@ -6,13 +6,14 @@ import (
 )
 
 type Config struct {
-	BindAddress   string
-	RemoteAddress string
-	Timeout       time.Duration
-	IdleTimeout   time.Duration
-	BaseContext   context.Context
-	PSKCallback   func([]byte) ([]byte, error)
-	MTU           int
+	BindAddress     string
+	RemoteAddress   string
+	Timeout         time.Duration
+	IdleTimeout     time.Duration
+	BaseContext     context.Context
+	PSKCallback     func([]byte) ([]byte, error)
+	MTU             int
+	SkipHelloVerify bool
 }
 
 func (cfg *Config) populateDefaults() *Config {
