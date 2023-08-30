@@ -66,9 +66,12 @@ Usage:
 dtlspipe [OPTION]... server <BIND ADDRESS> <REMOTE ADDRESS>
 dtlspipe [OPTION]... client <BIND ADDRESS> <REMOTE ADDRESS>
 dtlspipe [OPTION]... genpsk
+dtlspipe ciphers
 dtlspipe version
 
 Options:
+  -ciphers value
+    	colon-separated list of ciphers to use
   -cpuprofile string
     	write cpu profile to file
   -identity string

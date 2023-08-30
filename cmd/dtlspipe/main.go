@@ -56,7 +56,7 @@ var (
 )
 
 func init() {
-	flag.Var(&ciphersuites, "ciphers", "comma-separated list of ciphers to use")
+	flag.Var(&ciphersuites, "ciphers", "colon-separated list of ciphers to use")
 }
 
 func usage() {
@@ -66,6 +66,7 @@ func usage() {
 	fmt.Fprintf(out, "%s [OPTION]... server <BIND ADDRESS> <REMOTE ADDRESS>\n", ProgName)
 	fmt.Fprintf(out, "%s [OPTION]... client <BIND ADDRESS> <REMOTE ADDRESS>\n", ProgName)
 	fmt.Fprintf(out, "%s [OPTION]... genpsk\n", ProgName)
+	fmt.Fprintf(out, "%s ciphers\n", ProgName)
 	fmt.Fprintf(out, "%s version\n", ProgName)
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Options:")
