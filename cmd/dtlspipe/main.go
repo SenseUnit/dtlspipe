@@ -26,13 +26,14 @@ const (
 var (
 	version = "undefined"
 
-	timeout    = flag.Duration("timeout", 10*time.Second, "network operation timeout")
-	idleTime   = flag.Duration("idle-time", 90*time.Second, "max idle time for UDP session")
-	pskHexOpt  = flag.String("psk", "", "hex-encoded pre-shared key. Can be generated with genpsk subcommand")
-	keyLength  = flag.Uint("key-length", 16, "generate key with specified length")
-	identity   = flag.String("identity", "", "client identity sent to server")
-	mtu        = flag.Int("mtu", 1400, "MTU used for DTLS fragments")
-	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+	timeout         = flag.Duration("timeout", 10*time.Second, "network operation timeout")
+	idleTime        = flag.Duration("idle-time", 90*time.Second, "max idle time for UDP session")
+	pskHexOpt       = flag.String("psk", "", "hex-encoded pre-shared key. Can be generated with genpsk subcommand")
+	keyLength       = flag.Uint("key-length", 16, "generate key with specified length")
+	identity        = flag.String("identity", "", "client identity sent to server")
+	mtu             = flag.Int("mtu", 1400, "MTU used for DTLS fragments")
+	cpuprofile      = flag.String("cpuprofile", "", "write cpu profile to file")
+	skipHelloVerify = flag.Bool("skip-hello-verify", false, "(server only) skip hello verify request. Useful to workaround DPI")
 )
 
 func usage() {
@@ -115,13 +116,14 @@ func cmdServer(bindAddress, remoteAddress string) int {
 	defer cancel()
 
 	cfg := server.Config{
-		BindAddress:   bindAddress,
-		RemoteAddress: remoteAddress,
-		PSKCallback:   keystore.NewStaticKeystore(psk).PSKCallback,
-		Timeout:       *timeout,
-		IdleTimeout:   *idleTime,
-		BaseContext:   appCtx,
-		MTU:           *mtu,
+		BindAddress:     bindAddress,
+		RemoteAddress:   remoteAddress,
+		PSKCallback:     keystore.NewStaticKeystore(psk).PSKCallback,
+		Timeout:         *timeout,
+		IdleTimeout:     *idleTime,
+		BaseContext:     appCtx,
+		MTU:             *mtu,
+		SkipHelloVerify: *skipHelloVerify,
 	}
 
 	srv, err := server.New(&cfg)

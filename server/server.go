@@ -59,10 +59,11 @@ func New(cfg *Config) (*Server, error) {
 			dtls.TLS_PSK_WITH_AES_128_GCM_SHA256,
 			dtls.TLS_PSK_WITH_AES_128_CBC_SHA256,
 		},
-		ExtendedMasterSecret: dtls.RequireExtendedMasterSecret,
-		ConnectContextMaker:  srv.contextMaker,
-		PSK:                  srv.psk,
-		MTU:                  cfg.MTU,
+		ExtendedMasterSecret:    dtls.RequireExtendedMasterSecret,
+		ConnectContextMaker:     srv.contextMaker,
+		PSK:                     srv.psk,
+		MTU:                     cfg.MTU,
+		InsecureSkipVerifyHello: cfg.SkipHelloVerify,
 	}
 	lc := udp.ListenConfig{
 		AcceptFilter: func(packet []byte) bool {
