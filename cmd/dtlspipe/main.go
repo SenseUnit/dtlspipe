@@ -113,6 +113,7 @@ func cmdClient(bindAddress, remoteAddress string) int {
 		IdleTimeout:   *idleTime,
 		BaseContext:   appCtx,
 		MTU:           *mtu,
+		CipherSuites:  ciphersuites.Value,
 	}
 
 	clt, err := client.New(&cfg)
@@ -147,6 +148,7 @@ func cmdServer(bindAddress, remoteAddress string) int {
 		BaseContext:     appCtx,
 		MTU:             *mtu,
 		SkipHelloVerify: *skipHelloVerify,
+		CipherSuites:    ciphersuites.Value,
 	}
 
 	srv, err := server.New(&cfg)

@@ -51,19 +51,12 @@ func New(cfg *Config) (*Server, error) {
 	}
 
 	srv.dtlsConfig = &dtls.Config{
-		CipherSuites: []dtls.CipherSuiteID{
-			dtls.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
-			dtls.TLS_PSK_WITH_AES_128_CCM,
-			dtls.TLS_PSK_WITH_AES_128_CCM_8,
-			dtls.TLS_PSK_WITH_AES_256_CCM_8,
-			dtls.TLS_PSK_WITH_AES_128_GCM_SHA256,
-			dtls.TLS_PSK_WITH_AES_128_CBC_SHA256,
-		},
 		ExtendedMasterSecret:    dtls.RequireExtendedMasterSecret,
 		ConnectContextMaker:     srv.contextMaker,
 		PSK:                     srv.psk,
 		MTU:                     cfg.MTU,
 		InsecureSkipVerifyHello: cfg.SkipHelloVerify,
+		CipherSuites:            cfg.CipherSuites,
 	}
 	lc := udp.ListenConfig{
 		AcceptFilter: func(packet []byte) bool {
