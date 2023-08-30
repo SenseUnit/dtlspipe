@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Snawoot/dtlspipe/ciphers"
 	"github.com/Snawoot/dtlspipe/client"
 	"github.com/Snawoot/dtlspipe/keystore"
 	"github.com/Snawoot/dtlspipe/server"
@@ -22,6 +23,23 @@ const (
 	ProgName     = "dtlspipe"
 	PSKEnvVarKey = "DTLSPIPE_PSK"
 )
+
+type cipherlistArg struct {
+	Value ciphers.CipherList
+}
+
+func (l *cipherlistArg) String() string {
+	return ciphers.ListToString(l.Value)
+}
+
+func (l *cipherlistArg) Set(s string) error {
+	parsed, err := ciphers.StringToList(s)
+	if err != nil {
+		return fmt.Errorf("can't parse cipher list: %w", err)
+	}
+	l.Value = parsed
+	return nil
+}
 
 var (
 	version = "undefined"
@@ -34,7 +52,12 @@ var (
 	mtu             = flag.Int("mtu", 1400, "MTU used for DTLS fragments")
 	cpuprofile      = flag.String("cpuprofile", "", "write cpu profile to file")
 	skipHelloVerify = flag.Bool("skip-hello-verify", false, "(server only) skip hello verify request. Useful to workaround DPI")
+	ciphersuites    = cipherlistArg{}
 )
+
+func init() {
+	flag.Var(&ciphersuites, "ciphers", "colon-separated list of ciphers to use")
+}
 
 func usage() {
 	out := flag.CommandLine.Output()
@@ -43,6 +66,7 @@ func usage() {
 	fmt.Fprintf(out, "%s [OPTION]... server <BIND ADDRESS> <REMOTE ADDRESS>\n", ProgName)
 	fmt.Fprintf(out, "%s [OPTION]... client <BIND ADDRESS> <REMOTE ADDRESS>\n", ProgName)
 	fmt.Fprintf(out, "%s [OPTION]... genpsk\n", ProgName)
+	fmt.Fprintf(out, "%s ciphers\n", ProgName)
 	fmt.Fprintf(out, "%s version\n", ProgName)
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Options:")
@@ -90,6 +114,7 @@ func cmdClient(bindAddress, remoteAddress string) int {
 		IdleTimeout:   *idleTime,
 		BaseContext:   appCtx,
 		MTU:           *mtu,
+		CipherSuites:  ciphersuites.Value,
 	}
 
 	clt, err := client.New(&cfg)
@@ -124,6 +149,7 @@ func cmdServer(bindAddress, remoteAddress string) int {
 		BaseContext:     appCtx,
 		MTU:             *mtu,
 		SkipHelloVerify: *skipHelloVerify,
+		CipherSuites:    ciphersuites.Value,
 	}
 
 	srv, err := server.New(&cfg)
@@ -133,6 +159,13 @@ func cmdServer(bindAddress, remoteAddress string) int {
 	defer srv.Close()
 
 	<-appCtx.Done()
+	return 0
+}
+
+func cmdCiphers() int {
+	for _, id := range ciphers.FullList {
+		fmt.Println(ciphers.IDToString(id))
+	}
 	return 0
 }
 
@@ -155,6 +188,8 @@ func run() int {
 		switch args[0] {
 		case "genpsk":
 			return cmdGenPSK()
+		case "ciphers":
+			return cmdCiphers()
 		case "version":
 			return cmdVersion()
 		}

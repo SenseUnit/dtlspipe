@@ -50,19 +50,12 @@ func New(cfg *Config) (*Client, error) {
 	}
 
 	client.dtlsConfig = &dtls.Config{
-		CipherSuites: []dtls.CipherSuiteID{
-			dtls.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
-			dtls.TLS_PSK_WITH_AES_128_CCM,
-			dtls.TLS_PSK_WITH_AES_128_CCM_8,
-			dtls.TLS_PSK_WITH_AES_256_CCM_8,
-			dtls.TLS_PSK_WITH_AES_128_GCM_SHA256,
-			dtls.TLS_PSK_WITH_AES_128_CBC_SHA256,
-		},
 		ExtendedMasterSecret: dtls.RequireExtendedMasterSecret,
 		ConnectContextMaker:  client.contextMaker,
 		PSK:                  client.psk,
 		PSKIdentityHint:      []byte(cfg.PSKIdentity),
 		MTU:                  cfg.MTU,
+		CipherSuites:         cfg.CipherSuites,
 	}
 	lc := udp.ListenConfig{
 		Backlog: Backlog,

@@ -3,6 +3,8 @@ package client
 import (
 	"context"
 	"time"
+
+	"github.com/Snawoot/dtlspipe/ciphers"
 )
 
 type Config struct {
@@ -14,6 +16,7 @@ type Config struct {
 	PSKCallback   func([]byte) ([]byte, error)
 	PSKIdentity   string
 	MTU           int
+	CipherSuites  ciphers.CipherList
 }
 
 func (cfg *Config) populateDefaults() *Config {
@@ -25,6 +28,9 @@ func (cfg *Config) populateDefaults() *Config {
 	}
 	if cfg.IdleTimeout == 0 {
 		cfg.IdleTimeout = 90 * time.Second
+	}
+	if cfg.CipherSuites == nil {
+		cfg.CipherSuites = ciphers.DefaultList
 	}
 	return cfg
 }
