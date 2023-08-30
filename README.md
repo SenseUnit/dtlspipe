@@ -55,6 +55,8 @@ But you also need to make following adjustments to wireguard client config:
 AllowedIPs = 0.0.0.0/1, 128.0.0.0/2, 192.0.0.0/5, 200.0.0.0/7, 202.0.0.0/8, 203.0.0.0/18, 203.0.64.0/19, 203.0.96.0/20, 203.0.112.0/24, 203.0.113.0/29, 203.0.113.8/31, 203.0.113.10/32, 203.0.113.12/30, 203.0.113.16/28, 203.0.113.32/27, 203.0.113.64/26, 203.0.113.128/25, 203.0.114.0/23, 203.0.116.0/22, 203.0.120.0/21, 203.0.128.0/17, 203.1.0.0/16, 203.2.0.0/15, 203.4.0.0/14, 203.8.0.0/13, 203.16.0.0/12, 203.32.0.0/11, 203.64.0.0/10, 203.128.0.0/9, 204.0.0.0/6, 208.0.0.0/4, 224.0.0.0/3, ::/0
 ```
 
+**Note:** consider use of `-skip-hello-verify` option on server to workaround DPI if such filtering is the case for you.
+
 ## Synopsis
 
 ```
@@ -79,6 +81,8 @@ Options:
     	MTU used for DTLS fragments (default 1400)
   -psk string
     	hex-encoded pre-shared key. Can be generated with genpsk subcommand
+  -skip-hello-verify
+    	(server only) skip hello verify request. Useful to workaround DPI
   -timeout duration
     	network operation timeout (default 10s)
 ```
