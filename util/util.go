@@ -43,8 +43,17 @@ func isTimeout(err error) bool {
 	return false
 }
 
+func isTemporary(err error) bool {
+	if timeoutErr, ok := err.(interface {
+		Temporary() bool
+	}); ok {
+		return timeoutErr.Temporary()
+	}
+	return false
+}
+
 const (
-	MaxPktBuf = 4096
+	MaxPktBuf = 65536
 )
 
 func PairConn(left, right net.Conn, idleTimeout time.Duration) {
@@ -59,7 +68,7 @@ func PairConn(left, right net.Conn, idleTimeout time.Duration) {
 			oldLSN := lsn.Load()
 
 			if err := src.SetReadDeadline(time.Now().Add(idleTimeout)); err != nil {
-				log.Println("can't update deadline for connection: %v", err)
+				log.Printf("can't update deadline for connection: %v", err)
 				break
 			}
 
@@ -75,6 +84,10 @@ func PairConn(left, right net.Conn, idleTimeout time.Duration) {
 					}
 				} else {
 					// any other error
+					if isTemporary(err) {
+						log.Printf("ignoring temporary error during read from %s: %v", src.RemoteAddr(), err)
+						continue
+					}
 					log.Printf("read from %s error: %v", src.RemoteAddr(), err)
 				}
 				break
