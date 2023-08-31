@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	MaxPktBuf = 4096
+	MaxPktBuf = 65536
 	Backlog   = 1024
 )
 
