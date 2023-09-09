@@ -43,9 +43,9 @@ Few notes:
 
 ### Wireguard
 
-dtlspipe setup can be done using example for generic case, but dtlspipe server should point to the wireguard port.
+dtlspipe setup can be done using example for generic case, but more specifically, dtlspipe server should point to the wireguard server port and wireguard client should communicate with port of dtlspipe client.
 
-But you also need to make following adjustments to wireguard client config:
+You need to make following adjustments to wireguard client config:
 
 1. Use bind address of the dtlspipe client as endpoint for client's wireguard connection.
 2. Use smaller MTU for wireguard tunnel, add `MTU = 1280` to the `[Peer]` section of wireguard client and server tunnel config.
