@@ -105,7 +105,7 @@ func (client *Client) serve(conn net.Conn) {
 
 	remoteConn, err = dtls.ClientWithContext(dialCtx, remoteConn, client.dtlsConfig)
 	if err != nil {
-		log.Printf("DTL handshake with remote server failed: %v", err)
+		log.Printf("DTLS handshake with remote server failed: %v", err)
 		return
 	}
 
