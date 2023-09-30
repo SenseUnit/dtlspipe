@@ -67,6 +67,7 @@ dtlspipe [OPTION]... server <BIND ADDRESS> <REMOTE ADDRESS>
 dtlspipe [OPTION]... client <BIND ADDRESS> <REMOTE ADDRESS>
 dtlspipe [OPTION]... genpsk
 dtlspipe ciphers
+dtlspipe curves
 dtlspipe version
 
 Options:
@@ -74,6 +75,8 @@ Options:
     	colon-separated list of ciphers to use
   -cpuprofile string
     	write cpu profile to file
+  -curves value
+    	colon-separated list of curves to use
   -identity string
     	client identity sent to server
   -idle-time duration
