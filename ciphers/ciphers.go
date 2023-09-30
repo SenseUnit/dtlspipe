@@ -19,7 +19,7 @@ var FullCipherList = CipherList{
 }
 
 var DefaultCipherList = FullCipherList
-var DefaultListString = CipherListToString(DefaultCipherList)
+var DefaultCipherListString = CipherListToString(DefaultCipherList)
 var CipherNameToID map[string]dtls.CipherSuiteID
 
 func init() {

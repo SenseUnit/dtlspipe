@@ -56,6 +56,7 @@ func New(cfg *Config) (*Client, error) {
 		PSKIdentityHint:      []byte(cfg.PSKIdentity),
 		MTU:                  cfg.MTU,
 		CipherSuites:         cfg.CipherSuites,
+		EllipticCurves:       cfg.EllipticCurves,
 	}
 	lc := udp.ListenConfig{
 		Backlog: Backlog,
