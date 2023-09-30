@@ -9,7 +9,7 @@ import (
 
 type CipherList = []dtls.CipherSuiteID
 
-var FullList = CipherList{
+var FullCipherList = CipherList{
 	dtls.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
 	dtls.TLS_PSK_WITH_AES_128_CCM,
 	dtls.TLS_PSK_WITH_AES_128_CCM_8,
@@ -18,22 +18,22 @@ var FullList = CipherList{
 	dtls.TLS_PSK_WITH_AES_128_CBC_SHA256,
 }
 
-var DefaultList = FullList
-var DefaultListString = ListToString(DefaultList)
-var NameToID map[string]dtls.CipherSuiteID
+var DefaultCipherList = FullCipherList
+var DefaultListString = CipherListToString(DefaultCipherList)
+var CipherNameToID map[string]dtls.CipherSuiteID
 
 func init() {
-	NameToID = make(map[string]dtls.CipherSuiteID)
-	for _, id := range FullList {
-		NameToID[dtls.CipherSuiteName(id)] = id
+	CipherNameToID = make(map[string]dtls.CipherSuiteID)
+	for _, id := range FullCipherList {
+		CipherNameToID[dtls.CipherSuiteName(id)] = id
 	}
 }
 
-func IDToString(id dtls.CipherSuiteID) string {
+func CipherIDToString(id dtls.CipherSuiteID) string {
 	return dtls.CipherSuiteName(id)
 }
 
-func ListToString(lst CipherList) string {
+func CipherListToString(lst CipherList) string {
 	var b strings.Builder
 	var firstPrinted bool
 	for _, id := range lst {
@@ -47,14 +47,14 @@ func ListToString(lst CipherList) string {
 	return b.String()
 }
 
-func StringToList(str string) (CipherList, error) {
+func StringToCipherList(str string) (CipherList, error) {
 	if str == "" {
 		return nil, nil
 	}
 	parts := strings.Split(str, ":")
 	var res CipherList
 	for _, name := range parts {
-		if id, ok := NameToID[name]; ok {
+		if id, ok := CipherNameToID[name]; ok {
 			res = append(res, id)
 		} else {
 			return nil, fmt.Errorf("unknown ciphersuite: %q", name)

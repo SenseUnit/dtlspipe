@@ -30,7 +30,7 @@ func (cfg *Config) populateDefaults() *Config {
 		cfg.IdleTimeout = 90 * time.Second
 	}
 	if cfg.CipherSuites == nil {
-		cfg.CipherSuites = ciphers.DefaultList
+		cfg.CipherSuites = ciphers.DefaultCipherList
 	}
 	return cfg
 }

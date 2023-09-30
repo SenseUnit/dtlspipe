@@ -29,11 +29,11 @@ type cipherlistArg struct {
 }
 
 func (l *cipherlistArg) String() string {
-	return ciphers.ListToString(l.Value)
+	return ciphers.CipherListToString(l.Value)
 }
 
 func (l *cipherlistArg) Set(s string) error {
-	parsed, err := ciphers.StringToList(s)
+	parsed, err := ciphers.StringToCipherList(s)
 	if err != nil {
 		return fmt.Errorf("can't parse cipher list: %w", err)
 	}
@@ -163,8 +163,8 @@ func cmdServer(bindAddress, remoteAddress string) int {
 }
 
 func cmdCiphers() int {
-	for _, id := range ciphers.FullList {
-		fmt.Println(ciphers.IDToString(id))
+	for _, id := range ciphers.FullCipherList {
+		fmt.Println(ciphers.CipherIDToString(id))
 	}
 	return 0
 }
