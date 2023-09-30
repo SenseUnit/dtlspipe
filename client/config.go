@@ -8,15 +8,16 @@ import (
 )
 
 type Config struct {
-	BindAddress   string
-	RemoteAddress string
-	Timeout       time.Duration
-	IdleTimeout   time.Duration
-	BaseContext   context.Context
-	PSKCallback   func([]byte) ([]byte, error)
-	PSKIdentity   string
-	MTU           int
-	CipherSuites  ciphers.CipherList
+	BindAddress    string
+	RemoteAddress  string
+	Timeout        time.Duration
+	IdleTimeout    time.Duration
+	BaseContext    context.Context
+	PSKCallback    func([]byte) ([]byte, error)
+	PSKIdentity    string
+	MTU            int
+	CipherSuites   ciphers.CipherList
+	EllipticCurves ciphers.CurveList
 }
 
 func (cfg *Config) populateDefaults() *Config {
@@ -30,7 +31,10 @@ func (cfg *Config) populateDefaults() *Config {
 		cfg.IdleTimeout = 90 * time.Second
 	}
 	if cfg.CipherSuites == nil {
-		cfg.CipherSuites = ciphers.DefaultList
+		cfg.CipherSuites = ciphers.DefaultCipherList
+	}
+	if cfg.EllipticCurves == nil {
+		cfg.EllipticCurves = ciphers.DefaultCurveList
 	}
 	return cfg
 }

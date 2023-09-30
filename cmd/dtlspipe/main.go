@@ -29,13 +29,30 @@ type cipherlistArg struct {
 }
 
 func (l *cipherlistArg) String() string {
-	return ciphers.ListToString(l.Value)
+	return ciphers.CipherListToString(l.Value)
 }
 
 func (l *cipherlistArg) Set(s string) error {
-	parsed, err := ciphers.StringToList(s)
+	parsed, err := ciphers.StringToCipherList(s)
 	if err != nil {
 		return fmt.Errorf("can't parse cipher list: %w", err)
+	}
+	l.Value = parsed
+	return nil
+}
+
+type curvelistArg struct {
+	Value ciphers.CurveList
+}
+
+func (l *curvelistArg) String() string {
+	return ciphers.CurveListToString(l.Value)
+}
+
+func (l *curvelistArg) Set(s string) error {
+	parsed, err := ciphers.StringToCurveList(s)
+	if err != nil {
+		return fmt.Errorf("can't parse curve list: %w", err)
 	}
 	l.Value = parsed
 	return nil
@@ -53,10 +70,12 @@ var (
 	cpuprofile      = flag.String("cpuprofile", "", "write cpu profile to file")
 	skipHelloVerify = flag.Bool("skip-hello-verify", false, "(server only) skip hello verify request. Useful to workaround DPI")
 	ciphersuites    = cipherlistArg{}
+	curves          = curvelistArg{}
 )
 
 func init() {
 	flag.Var(&ciphersuites, "ciphers", "colon-separated list of ciphers to use")
+	flag.Var(&curves, "curves", "colon-separated list of curves to use")
 }
 
 func usage() {
@@ -67,6 +86,7 @@ func usage() {
 	fmt.Fprintf(out, "%s [OPTION]... client <BIND ADDRESS> <REMOTE ADDRESS>\n", ProgName)
 	fmt.Fprintf(out, "%s [OPTION]... genpsk\n", ProgName)
 	fmt.Fprintf(out, "%s ciphers\n", ProgName)
+	fmt.Fprintf(out, "%s curves\n", ProgName)
 	fmt.Fprintf(out, "%s version\n", ProgName)
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Options:")
@@ -106,15 +126,16 @@ func cmdClient(bindAddress, remoteAddress string) int {
 	defer cancel()
 
 	cfg := client.Config{
-		BindAddress:   bindAddress,
-		RemoteAddress: remoteAddress,
-		PSKCallback:   keystore.NewStaticKeystore(psk).PSKCallback,
-		PSKIdentity:   *identity,
-		Timeout:       *timeout,
-		IdleTimeout:   *idleTime,
-		BaseContext:   appCtx,
-		MTU:           *mtu,
-		CipherSuites:  ciphersuites.Value,
+		BindAddress:    bindAddress,
+		RemoteAddress:  remoteAddress,
+		PSKCallback:    keystore.NewStaticKeystore(psk).PSKCallback,
+		PSKIdentity:    *identity,
+		Timeout:        *timeout,
+		IdleTimeout:    *idleTime,
+		BaseContext:    appCtx,
+		MTU:            *mtu,
+		CipherSuites:   ciphersuites.Value,
+		EllipticCurves: curves.Value,
 	}
 
 	clt, err := client.New(&cfg)
@@ -150,6 +171,7 @@ func cmdServer(bindAddress, remoteAddress string) int {
 		MTU:             *mtu,
 		SkipHelloVerify: *skipHelloVerify,
 		CipherSuites:    ciphersuites.Value,
+		EllipticCurves:  curves.Value,
 	}
 
 	srv, err := server.New(&cfg)
@@ -163,8 +185,15 @@ func cmdServer(bindAddress, remoteAddress string) int {
 }
 
 func cmdCiphers() int {
-	for _, id := range ciphers.FullList {
-		fmt.Println(ciphers.IDToString(id))
+	for _, id := range ciphers.FullCipherList {
+		fmt.Println(ciphers.CipherIDToString(id))
+	}
+	return 0
+}
+
+func cmdCurves() int {
+	for _, curve := range ciphers.FullCurveList {
+		fmt.Println(ciphers.CurveIDToString(curve))
 	}
 	return 0
 }
@@ -190,6 +219,8 @@ func run() int {
 			return cmdGenPSK()
 		case "ciphers":
 			return cmdCiphers()
+		case "curves":
+			return cmdCurves()
 		case "version":
 			return cmdVersion()
 		}

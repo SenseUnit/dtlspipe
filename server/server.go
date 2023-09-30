@@ -57,6 +57,7 @@ func New(cfg *Config) (*Server, error) {
 		MTU:                     cfg.MTU,
 		InsecureSkipVerifyHello: cfg.SkipHelloVerify,
 		CipherSuites:            cfg.CipherSuites,
+		EllipticCurves:          cfg.EllipticCurves,
 	}
 	lc := udp.ListenConfig{
 		AcceptFilter: func(packet []byte) bool {
