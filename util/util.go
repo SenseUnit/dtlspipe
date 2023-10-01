@@ -7,7 +7,6 @@ import (
 	"log"
 	"net"
 	"sync"
-	"sync/atomic"
 	"time"
 )
 
@@ -56,17 +55,15 @@ const (
 	MaxPktBuf = 65536
 )
 
-func PairConn(left, right net.Conn, idleTimeout time.Duration) {
-	var lsn atomic.Int32
+func PairConn(left, right net.Conn, idleTimeout time.Duration, staleMode StaleMode) {
 	var wg sync.WaitGroup
+	tracker := newTracker(staleMode)
 
-	copier := func(dst, src net.Conn) {
+	copier := func(dst, src net.Conn, label bool) {
 		defer wg.Done()
 		defer dst.Close()
 		buf := make([]byte, MaxPktBuf)
 		for {
-			oldLSN := lsn.Load()
-
 			if err := src.SetReadDeadline(time.Now().Add(idleTimeout)); err != nil {
 				log.Printf("can't update deadline for connection: %v", err)
 				break
@@ -76,7 +73,7 @@ func PairConn(left, right net.Conn, idleTimeout time.Duration) {
 			if err != nil {
 				if isTimeout(err) {
 					// hit read deadline
-					if oldLSN != lsn.Load() {
+					if tracker.handleTimeout(label) {
 						// not stale conn
 						continue
 					} else {
@@ -93,7 +90,7 @@ func PairConn(left, right net.Conn, idleTimeout time.Duration) {
 				break
 			}
 
-			lsn.Add(1)
+			tracker.notify(label)
 
 			_, err = dst.Write(buf[:n])
 			if err != nil {
@@ -104,7 +101,7 @@ func PairConn(left, right net.Conn, idleTimeout time.Duration) {
 	}
 
 	wg.Add(2)
-	go copier(left, right)
-	go copier(right, left)
+	go copier(left, right, false)
+	go copier(right, left, true)
 	wg.Wait()
 }

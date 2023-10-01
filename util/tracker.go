@@ -1,35 +1,71 @@
 package util
 
-import "sync/atomic"
+import (
+	"errors"
+	"sync/atomic"
+)
 
 type StaleMode int
 
 const (
-	BothStale = iota
+	BothStale StaleMode = iota
 	EitherStale
 	LeftStale
 	RightStale
 )
+
+func (m *StaleMode) String() string {
+	if m == nil {
+		return "<nil>"
+	}
+	switch *m {
+	case BothStale:
+		return "both"
+	case EitherStale:
+		return "either"
+	case LeftStale:
+		return "left"
+	case RightStale:
+		return "right"
+	}
+	return "<unknown>"
+}
+
+func (m *StaleMode) Set(val string) error {
+	switch val {
+	case "both":
+		*m = BothStale
+	case "either":
+		*m = EitherStale
+	case "left":
+		*m = LeftStale
+	case "right":
+		*m = RightStale
+	default:
+		return errors.New("unknown stale mode")
+	}
+	return nil
+}
 
 type tracker struct {
 	leftCounter     atomic.Int32
 	rightCounter    atomic.Int32
 	leftTimedOutAt  atomic.Int32
 	rightTimedOutAt atomic.Int32
-	staleFun        func() bool
+	staleFunc       func() bool
 }
 
 func newTracker(staleMode StaleMode) *tracker {
 	t := &tracker{}
 	switch staleMode {
 	case BothStale:
-		t.staleFun = t.bothStale
+		t.staleFunc = t.bothStale
 	case EitherStale:
-		t.staleFun = t.eitherStale
+		t.staleFunc = t.eitherStale
 	case LeftStale:
-		t.staleFun = t.leftStale
+		t.staleFunc = t.leftStale
 	case RightStale:
-		t.staleFun = t.rightStale
+		t.staleFunc = t.rightStale
 	default:
 		panic("unsupported stale mode")
 	}
@@ -50,7 +86,7 @@ func (t *tracker) handleTimeout(isLeft bool) bool {
 	} else {
 		t.rightTimedOutAt.Store(t.rightCounter.Load())
 	}
-	return t.staleFun()
+	return !t.staleFunc()
 }
 
 func (t *tracker) leftStale() bool {
