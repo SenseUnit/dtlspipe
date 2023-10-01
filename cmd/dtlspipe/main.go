@@ -72,6 +72,7 @@ var (
 	ciphersuites    = cipherlistArg{}
 	curves          = curvelistArg{}
 	staleMode       = util.EitherStale
+	timeLimit       = flag.Duration("time-limit", 0, "hard time limit for each session")
 )
 
 func init() {
@@ -139,6 +140,7 @@ func cmdClient(bindAddress, remoteAddress string) int {
 		CipherSuites:   ciphersuites.Value,
 		EllipticCurves: curves.Value,
 		StaleMode:      staleMode,
+		TimeLimit:      *timeLimit,
 	}
 
 	clt, err := client.New(&cfg)
@@ -176,6 +178,7 @@ func cmdServer(bindAddress, remoteAddress string) int {
 		CipherSuites:    ciphersuites.Value,
 		EllipticCurves:  curves.Value,
 		StaleMode:       staleMode,
+		TimeLimit:       *timeLimit,
 	}
 
 	srv, err := server.New(&cfg)

@@ -80,7 +80,7 @@ Options:
   -identity string
     	client identity sent to server
   -idle-time duration
-    	max idle time for UDP session (default 1m30s)
+    	max idle time for UDP session (default 30s)
   -key-length uint
     	generate key with specified length (default 16)
   -mtu int
@@ -91,6 +91,8 @@ Options:
     	(server only) skip hello verify request. Useful to workaround DPI
   -stale-mode value
     	which stale side of connection makes whole session stale (both, either, left, right) (default either)
+  -time-limit duration
+    	hard time limit for each session
   -timeout duration
     	network operation timeout (default 10s)
 ```
