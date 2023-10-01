@@ -31,6 +31,7 @@ type Server struct {
 	cancelCtx   func()
 	staleMode   util.StaleMode
 	workerWG    sync.WaitGroup
+	timeLimit   time.Duration
 }
 
 func New(cfg *Config) (*Server, error) {
@@ -46,6 +47,7 @@ func New(cfg *Config) (*Server, error) {
 		baseCtx:     baseCtx,
 		cancelCtx:   cancelCtx,
 		staleMode:   cfg.StaleMode,
+		timeLimit:   cfg.TimeLimit,
 	}
 
 	lAddrPort, err := netip.ParseAddrPort(cfg.BindAddress)
@@ -119,7 +121,14 @@ func (srv *Server) serve(conn net.Conn) {
 	defer log.Printf("[-] conn %s <=> %s", conn.LocalAddr(), conn.RemoteAddr())
 	defer conn.Close()
 
-	dialCtx, cancel := context.WithTimeout(srv.baseCtx, srv.timeout)
+	ctx := srv.baseCtx
+	if srv.timeLimit != 0 {
+		newCtx, cancel := context.WithTimeout(ctx, srv.timeLimit)
+		defer cancel()
+		ctx = newCtx
+	}
+
+	dialCtx, cancel := context.WithTimeout(ctx, srv.timeout)
 	defer cancel()
 	remoteConn, err := (&net.Dialer{}).DialContext(dialCtx, "udp", srv.rAddr)
 	if err != nil {
@@ -128,7 +137,7 @@ func (srv *Server) serve(conn net.Conn) {
 	}
 	defer remoteConn.Close()
 
-	util.PairConn(srv.baseCtx, conn, remoteConn, srv.idleTimeout, srv.staleMode)
+	util.PairConn(ctx, conn, remoteConn, srv.idleTimeout, srv.staleMode)
 }
 
 func (srv *Server) contextMaker() (context.Context, func()) {

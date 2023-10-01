@@ -20,6 +20,7 @@ type Config struct {
 	CipherSuites   ciphers.CipherList
 	EllipticCurves ciphers.CurveList
 	StaleMode      util.StaleMode
+	TimeLimit      time.Duration
 }
 
 func (cfg *Config) populateDefaults() *Config {
