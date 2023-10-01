@@ -62,7 +62,7 @@ var (
 	version = "undefined"
 
 	timeout         = flag.Duration("timeout", 10*time.Second, "network operation timeout")
-	idleTime        = flag.Duration("idle-time", 90*time.Second, "max idle time for UDP session")
+	idleTime        = flag.Duration("idle-time", 30*time.Second, "max idle time for UDP session")
 	pskHexOpt       = flag.String("psk", "", "hex-encoded pre-shared key. Can be generated with genpsk subcommand")
 	keyLength       = flag.Uint("key-length", 16, "generate key with specified length")
 	identity        = flag.String("identity", "", "client identity sent to server")
