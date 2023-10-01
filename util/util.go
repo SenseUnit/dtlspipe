@@ -1,6 +1,7 @@
 package util
 
 import (
+	"context"
 	"crypto/rand"
 	"encoding/hex"
 	"fmt"
@@ -55,9 +56,20 @@ const (
 	MaxPktBuf = 65536
 )
 
-func PairConn(left, right net.Conn, idleTimeout time.Duration, staleMode StaleMode) {
+func PairConn(ctx context.Context, left, right net.Conn, idleTimeout time.Duration, staleMode StaleMode) {
 	var wg sync.WaitGroup
 	tracker := newTracker(staleMode)
+
+	copyDone := make(chan struct{})
+	go func() {
+		select {
+		case <-ctx.Done():
+			left.Close()
+			right.Close()
+		case <-copyDone:
+		}
+	}()
+	defer close(copyDone)
 
 	copier := func(dst, src net.Conn, label bool) {
 		defer wg.Done()

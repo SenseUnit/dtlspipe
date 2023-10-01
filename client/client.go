@@ -6,6 +6,7 @@ import (
 	"log"
 	"net"
 	"net/netip"
+	"sync"
 	"time"
 
 	"github.com/Snawoot/dtlspipe/util"
@@ -28,6 +29,7 @@ type Client struct {
 	baseCtx     context.Context
 	cancelCtx   func()
 	staleMode   util.StaleMode
+	workerWG    sync.WaitGroup
 }
 
 func New(cfg *Config) (*Client, error) {
@@ -85,7 +87,9 @@ func (client *Client) listen() {
 			continue
 		}
 
+		client.workerWG.Add(1)
 		go func(conn net.Conn) {
+			defer client.workerWG.Done()
 			defer conn.Close()
 			client.serve(conn)
 		}(conn)
@@ -112,7 +116,7 @@ func (client *Client) serve(conn net.Conn) {
 		return
 	}
 
-	util.PairConn(conn, remoteConn, client.idleTimeout, client.staleMode)
+	util.PairConn(client.baseCtx, conn, remoteConn, client.idleTimeout, client.staleMode)
 }
 
 func (client *Client) contextMaker() (context.Context, func()) {
@@ -121,5 +125,7 @@ func (client *Client) contextMaker() (context.Context, func()) {
 
 func (client *Client) Close() error {
 	client.cancelCtx()
-	return client.listener.Close()
+	err := client.listener.Close()
+	client.workerWG.Wait()
+	return err
 }
