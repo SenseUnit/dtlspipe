@@ -77,7 +77,7 @@ var (
 func init() {
 	flag.Var(&ciphersuites, "ciphers", "colon-separated list of ciphers to use")
 	flag.Var(&curves, "curves", "colon-separated list of curves to use")
-	flag.Var(&staleMode, "stale-mode", "which stale side of connection makes whole session stale")
+	flag.Var(&staleMode, "stale-mode", "which stale side of connection makes whole session stale (both, either, left, right)")
 }
 
 func usage() {
