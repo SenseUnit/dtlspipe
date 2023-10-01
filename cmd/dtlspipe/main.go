@@ -62,7 +62,7 @@ var (
 	version = "undefined"
 
 	timeout         = flag.Duration("timeout", 10*time.Second, "network operation timeout")
-	idleTime        = flag.Duration("idle-time", 90*time.Second, "max idle time for UDP session")
+	idleTime        = flag.Duration("idle-time", 30*time.Second, "max idle time for UDP session")
 	pskHexOpt       = flag.String("psk", "", "hex-encoded pre-shared key. Can be generated with genpsk subcommand")
 	keyLength       = flag.Uint("key-length", 16, "generate key with specified length")
 	identity        = flag.String("identity", "", "client identity sent to server")
@@ -71,11 +71,13 @@ var (
 	skipHelloVerify = flag.Bool("skip-hello-verify", false, "(server only) skip hello verify request. Useful to workaround DPI")
 	ciphersuites    = cipherlistArg{}
 	curves          = curvelistArg{}
+	staleMode       = util.EitherStale
 )
 
 func init() {
 	flag.Var(&ciphersuites, "ciphers", "colon-separated list of ciphers to use")
 	flag.Var(&curves, "curves", "colon-separated list of curves to use")
+	flag.Var(&staleMode, "stale-mode", "which stale side of connection makes whole session stale (both, either, left, right)")
 }
 
 func usage() {
@@ -136,6 +138,7 @@ func cmdClient(bindAddress, remoteAddress string) int {
 		MTU:            *mtu,
 		CipherSuites:   ciphersuites.Value,
 		EllipticCurves: curves.Value,
+		StaleMode:      staleMode,
 	}
 
 	clt, err := client.New(&cfg)
@@ -172,6 +175,7 @@ func cmdServer(bindAddress, remoteAddress string) int {
 		SkipHelloVerify: *skipHelloVerify,
 		CipherSuites:    ciphersuites.Value,
 		EllipticCurves:  curves.Value,
+		StaleMode:       staleMode,
 	}
 
 	srv, err := server.New(&cfg)

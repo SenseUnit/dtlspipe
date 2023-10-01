@@ -27,6 +27,7 @@ type Client struct {
 	idleTimeout time.Duration
 	baseCtx     context.Context
 	cancelCtx   func()
+	staleMode   util.StaleMode
 }
 
 func New(cfg *Config) (*Client, error) {
@@ -41,6 +42,7 @@ func New(cfg *Config) (*Client, error) {
 		idleTimeout: cfg.IdleTimeout,
 		baseCtx:     baseCtx,
 		cancelCtx:   cancelCtx,
+		staleMode:   cfg.StaleMode,
 	}
 
 	lAddrPort, err := netip.ParseAddrPort(cfg.BindAddress)
@@ -110,7 +112,7 @@ func (client *Client) serve(conn net.Conn) {
 		return
 	}
 
-	util.PairConn(conn, remoteConn, client.idleTimeout)
+	util.PairConn(conn, remoteConn, client.idleTimeout, client.staleMode)
 }
 
 func (client *Client) contextMaker() (context.Context, func()) {

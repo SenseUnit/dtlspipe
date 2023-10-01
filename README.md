@@ -89,6 +89,8 @@ Options:
     	hex-encoded pre-shared key. Can be generated with genpsk subcommand
   -skip-hello-verify
     	(server only) skip hello verify request. Useful to workaround DPI
+  -stale-mode value
+    	which stale side of connection makes whole session stale (both, either, left, right) (default either)
   -timeout duration
     	network operation timeout (default 10s)
 ```

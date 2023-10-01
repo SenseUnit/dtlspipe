@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/Snawoot/dtlspipe/ciphers"
+	"github.com/Snawoot/dtlspipe/util"
 )
 
 type Config struct {
@@ -18,6 +19,7 @@ type Config struct {
 	MTU            int
 	CipherSuites   ciphers.CipherList
 	EllipticCurves ciphers.CurveList
+	StaleMode      util.StaleMode
 }
 
 func (cfg *Config) populateDefaults() *Config {

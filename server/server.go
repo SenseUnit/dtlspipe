@@ -28,6 +28,7 @@ type Server struct {
 	idleTimeout time.Duration
 	baseCtx     context.Context
 	cancelCtx   func()
+	staleMode   util.StaleMode
 }
 
 func New(cfg *Config) (*Server, error) {
@@ -42,6 +43,7 @@ func New(cfg *Config) (*Server, error) {
 		idleTimeout: cfg.IdleTimeout,
 		baseCtx:     baseCtx,
 		cancelCtx:   cancelCtx,
+		staleMode:   cfg.StaleMode,
 	}
 
 	lAddrPort, err := netip.ParseAddrPort(cfg.BindAddress)
@@ -122,7 +124,7 @@ func (srv *Server) serve(conn net.Conn) {
 	}
 	defer remoteConn.Close()
 
-	util.PairConn(conn, remoteConn, srv.idleTimeout)
+	util.PairConn(conn, remoteConn, srv.idleTimeout, srv.staleMode)
 }
 
 func (srv *Server) contextMaker() (context.Context, func()) {
