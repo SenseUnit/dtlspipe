@@ -68,7 +68,7 @@ var (
 	identity        = flag.String("identity", "", "client identity sent to server")
 	mtu             = flag.Int("mtu", 1400, "MTU used for DTLS fragments")
 	cpuprofile      = flag.String("cpuprofile", "", "write cpu profile to file")
-	skipHelloVerify = flag.Bool("skip-hello-verify", false, "(server only) skip hello verify request. Useful to workaround DPI")
+	skipHelloVerify = flag.Bool("skip-hello-verify", true, "(server only) skip hello verify request. Useful to workaround DPI")
 	ciphersuites    = cipherlistArg{}
 	curves          = curvelistArg{}
 	staleMode       = util.EitherStale
