@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/netip"
 	"os"
 	"os/signal"
 	"runtime/pprof"
@@ -17,6 +18,7 @@ import (
 	"github.com/Snawoot/dtlspipe/keystore"
 	"github.com/Snawoot/dtlspipe/server"
 	"github.com/Snawoot/dtlspipe/util"
+	"github.com/Snawoot/rlzone"
 )
 
 const (
@@ -58,6 +60,30 @@ func (l *curvelistArg) Set(s string) error {
 	return nil
 }
 
+type ratelimitArg struct {
+	value rlzone.Ratelimiter[netip.Addr]
+}
+
+func (r *ratelimitArg) String() string {
+	if r == nil || r.value == nil {
+		return ""
+	}
+	return r.value.String()
+}
+
+func (r *ratelimitArg) Set(s string) error {
+	if s == "" {
+		r.value = nil
+		return nil
+	}
+	rl, err := rlzone.FromString[netip.Addr](s)
+	if err != nil {
+		return err
+	}
+	r.value = rl
+	return nil
+}
+
 var (
 	version = "undefined"
 
@@ -73,12 +99,14 @@ var (
 	curves          = curvelistArg{}
 	staleMode       = util.EitherStale
 	timeLimit       = flag.Duration("time-limit", 0, "hard time limit for each session")
+	rateLimit       = ratelimitArg{rlzone.Must(rlzone.NewSmallest[netip.Addr](1*time.Minute, 20))}
 )
 
 func init() {
 	flag.Var(&ciphersuites, "ciphers", "colon-separated list of ciphers to use")
 	flag.Var(&curves, "curves", "colon-separated list of curves to use")
 	flag.Var(&staleMode, "stale-mode", "which stale side of connection makes whole session stale (both, either, left, right)")
+	flag.Var(&rateLimit, "rate-limit", "limit for incoming connections rate. Format: <limit>/<time duration> or empty string to disable")
 }
 
 func usage() {
@@ -141,6 +169,7 @@ func cmdClient(bindAddress, remoteAddress string) int {
 		EllipticCurves: curves.Value,
 		StaleMode:      staleMode,
 		TimeLimit:      *timeLimit,
+		AllowFunc:      util.AllowByRatelimit(rateLimit.value),
 	}
 
 	clt, err := client.New(&cfg)
@@ -179,6 +208,7 @@ func cmdServer(bindAddress, remoteAddress string) int {
 		EllipticCurves:  curves.Value,
 		StaleMode:       staleMode,
 		TimeLimit:       *timeLimit,
+		AllowFunc:       util.AllowByRatelimit(rateLimit.value),
 	}
 
 	srv, err := server.New(&cfg)

@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"net"
 	"time"
 
 	"github.com/Snawoot/dtlspipe/ciphers"
@@ -21,6 +22,7 @@ type Config struct {
 	EllipticCurves  ciphers.CurveList
 	StaleMode       util.StaleMode
 	TimeLimit       time.Duration
+	AllowFunc       func(localAddr, remoteAddr net.Addr) bool
 }
 
 func (cfg *Config) populateDefaults() *Config {
@@ -38,6 +40,9 @@ func (cfg *Config) populateDefaults() *Config {
 	}
 	if cfg.EllipticCurves == nil {
 		cfg.EllipticCurves = ciphers.DefaultCurveList
+	}
+	if cfg.AllowFunc == nil {
+		cfg.AllowFunc = util.AllowAllFunc
 	}
 	return cfg
 }

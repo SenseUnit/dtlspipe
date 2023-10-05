@@ -31,6 +31,7 @@ type Client struct {
 	staleMode   util.StaleMode
 	workerWG    sync.WaitGroup
 	timeLimit   time.Duration
+	allowFunc   func(net.Addr, net.Addr) bool
 }
 
 func New(cfg *Config) (*Client, error) {
@@ -47,6 +48,7 @@ func New(cfg *Config) (*Client, error) {
 		cancelCtx:   cancelCtx,
 		staleMode:   cfg.StaleMode,
 		timeLimit:   cfg.TimeLimit,
+		allowFunc:   cfg.AllowFunc,
 	}
 
 	lAddrPort, err := netip.ParseAddrPort(cfg.BindAddress)
@@ -86,6 +88,10 @@ func (client *Client) listen() {
 		conn, err := client.listener.Accept()
 		if err != nil {
 			log.Printf("conn accept failed: %v", err)
+			continue
+		}
+
+		if !client.allowFunc(conn.LocalAddr(), conn.RemoteAddr()) {
 			continue
 		}
 
