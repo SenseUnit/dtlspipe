@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -60,6 +61,44 @@ func (l *curvelistArg) Set(s string) error {
 	return nil
 }
 
+type timelimitArg struct {
+	low  time.Duration
+	high time.Duration
+}
+
+func (a *timelimitArg) String() string {
+	if a.low == a.high {
+		return a.low.String()
+	}
+	return fmt.Sprintf("%s-%s", a.low.String(), a.high.String())
+}
+
+func (a *timelimitArg) Set(s string) error {
+	parts := strings.SplitN(s, "-", 2)
+	switch len(parts) {
+	case 1:
+		dur, err := time.ParseDuration(s)
+		if err != nil {
+			return err
+		}
+		a.low, a.high = dur, dur
+		return nil
+	case 2:
+		durLow, err := time.ParseDuration(parts[0])
+		if err != nil {
+			return fmt.Errorf("first component parse failed: %w", err)
+		}
+		durHigh, err := time.ParseDuration(parts[1])
+		if err != nil {
+			return fmt.Errorf("second component parse failed: %w", err)
+		}
+		a.low, a.high = durLow, durHigh
+		return nil
+	default:
+		return errors.New("unexpected number of components")
+	}
+}
+
 type ratelimitArg struct {
 	value rlzone.Ratelimiter[netip.Addr]
 }
@@ -98,7 +137,7 @@ var (
 	ciphersuites    = cipherlistArg{}
 	curves          = curvelistArg{}
 	staleMode       = util.EitherStale
-	timeLimit       = flag.Duration("time-limit", 0, "hard time limit for each session")
+	timeLimit       = timelimitArg{}
 	rateLimit       = ratelimitArg{rlzone.Must(rlzone.NewSmallest[netip.Addr](1*time.Minute, 20))}
 )
 
@@ -107,6 +146,7 @@ func init() {
 	flag.Var(&curves, "curves", "colon-separated list of curves to use")
 	flag.Var(&staleMode, "stale-mode", "which stale side of connection makes whole session stale (both, either, left, right)")
 	flag.Var(&rateLimit, "rate-limit", "limit for incoming connections rate. Format: <limit>/<time duration> or empty string to disable")
+	flag.Var(&timeLimit, "time-limit", "limit for each session `duration`. Use single value X for fixed limit or range X-Y for randomized limit")
 }
 
 func usage() {
@@ -168,7 +208,7 @@ func cmdClient(bindAddress, remoteAddress string) int {
 		CipherSuites:   ciphersuites.Value,
 		EllipticCurves: curves.Value,
 		StaleMode:      staleMode,
-		TimeLimit:      *timeLimit,
+		TimeLimitFunc:  util.TimeLimitFunc(timeLimit.low, timeLimit.high),
 		AllowFunc:      util.AllowByRatelimit(rateLimit.value),
 	}
 
@@ -207,7 +247,7 @@ func cmdServer(bindAddress, remoteAddress string) int {
 		CipherSuites:    ciphersuites.Value,
 		EllipticCurves:  curves.Value,
 		StaleMode:       staleMode,
-		TimeLimit:       *timeLimit,
+		TimeLimitFunc:   util.TimeLimitFunc(timeLimit.low, timeLimit.high),
 		AllowFunc:       util.AllowByRatelimit(rateLimit.value),
 	}
 

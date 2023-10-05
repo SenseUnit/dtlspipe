@@ -20,18 +20,18 @@ const (
 )
 
 type Client struct {
-	listener    net.Listener
-	dtlsConfig  *dtls.Config
-	rAddr       string
-	psk         func([]byte) ([]byte, error)
-	timeout     time.Duration
-	idleTimeout time.Duration
-	baseCtx     context.Context
-	cancelCtx   func()
-	staleMode   util.StaleMode
-	workerWG    sync.WaitGroup
-	timeLimit   time.Duration
-	allowFunc   func(net.Addr, net.Addr) bool
+	listener      net.Listener
+	dtlsConfig    *dtls.Config
+	rAddr         string
+	psk           func([]byte) ([]byte, error)
+	timeout       time.Duration
+	idleTimeout   time.Duration
+	baseCtx       context.Context
+	cancelCtx     func()
+	staleMode     util.StaleMode
+	workerWG      sync.WaitGroup
+	timeLimitFunc func() time.Duration
+	allowFunc     func(net.Addr, net.Addr) bool
 }
 
 func New(cfg *Config) (*Client, error) {
@@ -40,15 +40,15 @@ func New(cfg *Config) (*Client, error) {
 	baseCtx, cancelCtx := context.WithCancel(cfg.BaseContext)
 
 	client := &Client{
-		rAddr:       cfg.RemoteAddress,
-		timeout:     cfg.Timeout,
-		psk:         cfg.PSKCallback,
-		idleTimeout: cfg.IdleTimeout,
-		baseCtx:     baseCtx,
-		cancelCtx:   cancelCtx,
-		staleMode:   cfg.StaleMode,
-		timeLimit:   cfg.TimeLimit,
-		allowFunc:   cfg.AllowFunc,
+		rAddr:         cfg.RemoteAddress,
+		timeout:       cfg.Timeout,
+		psk:           cfg.PSKCallback,
+		idleTimeout:   cfg.IdleTimeout,
+		baseCtx:       baseCtx,
+		cancelCtx:     cancelCtx,
+		staleMode:     cfg.StaleMode,
+		timeLimitFunc: cfg.TimeLimitFunc,
+		allowFunc:     cfg.AllowFunc,
 	}
 
 	lAddrPort, err := netip.ParseAddrPort(cfg.BindAddress)
@@ -110,8 +110,9 @@ func (client *Client) serve(conn net.Conn) {
 	defer conn.Close()
 
 	ctx := client.baseCtx
-	if client.timeLimit != 0 {
-		newCtx, cancel := context.WithTimeout(ctx, client.timeLimit)
+	tl := client.timeLimitFunc()
+	if tl != 0 {
+		newCtx, cancel := context.WithTimeout(ctx, tl)
 		defer cancel()
 		ctx = newCtx
 	}

@@ -21,7 +21,7 @@ type Config struct {
 	CipherSuites   ciphers.CipherList
 	EllipticCurves ciphers.CurveList
 	StaleMode      util.StaleMode
-	TimeLimit      time.Duration
+	TimeLimitFunc  func() time.Duration
 	AllowFunc      func(localAddr, remoteAddr net.Addr) bool
 }
 
@@ -40,6 +40,9 @@ func (cfg *Config) populateDefaults() *Config {
 	}
 	if cfg.EllipticCurves == nil {
 		cfg.EllipticCurves = ciphers.DefaultCurveList
+	}
+	if cfg.TimeLimitFunc == nil {
+		cfg.TimeLimitFunc = util.FixedTimeLimitFunc(0)
 	}
 	if cfg.AllowFunc == nil {
 		cfg.AllowFunc = util.AllowAllFunc
