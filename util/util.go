@@ -2,10 +2,11 @@ package util
 
 import (
 	"context"
-	"crypto/rand"
+	crand "crypto/rand"
 	"encoding/hex"
 	"fmt"
 	"log"
+	"math/rand"
 	"net"
 	"net/netip"
 	"sync"
@@ -16,7 +17,7 @@ import (
 
 func GenPSK(length int) ([]byte, error) {
 	b := make([]byte, length)
-	_, err := rand.Read(b)
+	_, err := crand.Read(b)
 	if err != nil {
 		return nil, fmt.Errorf("random bytes generation failed: %w", err)
 	}
@@ -143,5 +144,29 @@ func AllowByRatelimit(z rlzone.Ratelimiter[netip.Addr]) func(net.Addr, net.Addr)
 	return func(_, remoteAddr net.Addr) bool {
 		key := NetAddrToNetipAddrPort(remoteAddr).Addr()
 		return z.Allow(key)
+	}
+}
+
+func FixedTimeLimitFunc(d time.Duration) func() time.Duration {
+	return func() time.Duration {
+		return d
+	}
+}
+
+func TimeLimitFunc(low, high time.Duration) func() time.Duration {
+	if low > high {
+		return TimeLimitFunc(high, low)
+	}
+	if low == high {
+		return FixedTimeLimitFunc(low)
+	}
+
+	r := rand.New(rand.NewSource(time.Now().UnixNano()))
+	var mux sync.Mutex
+	delta := high - low
+	return func() time.Duration {
+		mux.Lock()
+		defer mux.Unlock()
+		return low + time.Duration(r.Int63n(int64(delta)))
 	}
 }

@@ -96,7 +96,7 @@ Options:
   -stale-mode value
     	which stale side of connection makes whole session stale (both, either, left, right) (default either)
   -time-limit duration
-    	hard time limit for each session
+    	limit for each session duration. Use single value X for fixed limit or range X-Y for randomized limit
   -timeout duration
     	network operation timeout (default 10s)
 ```
