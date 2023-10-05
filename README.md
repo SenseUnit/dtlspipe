@@ -89,6 +89,8 @@ Options:
     	MTU used for DTLS fragments (default 1400)
   -psk string
     	hex-encoded pre-shared key. Can be generated with genpsk subcommand
+  -rate-limit value
+    	limit for incoming connections rate. Format: <limit>/<time duration> or empty string to disable (default 20/1m0s)
   -skip-hello-verify
     	(server only) skip hello verify request. Useful to workaround DPI (default true)
   -stale-mode value
