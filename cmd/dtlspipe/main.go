@@ -169,6 +169,7 @@ func cmdClient(bindAddress, remoteAddress string) int {
 		EllipticCurves: curves.Value,
 		StaleMode:      staleMode,
 		TimeLimit:      *timeLimit,
+		AllowFunc:      util.AllowByRatelimit(rateLimit.value),
 	}
 
 	clt, err := client.New(&cfg)
@@ -207,6 +208,7 @@ func cmdServer(bindAddress, remoteAddress string) int {
 		EllipticCurves:  curves.Value,
 		StaleMode:       staleMode,
 		TimeLimit:       *timeLimit,
+		AllowFunc:       util.AllowByRatelimit(rateLimit.value),
 	}
 
 	srv, err := server.New(&cfg)
