@@ -1,9 +1,6 @@
 name: docker-ci
 
 on:
-  push:
-    branches:
-      - 'master'
   release:
     types: [published]
 
