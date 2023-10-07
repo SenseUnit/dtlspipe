@@ -48,7 +48,7 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64,linux/386,linux/arm/v7
           push: true
-          tags:
-            - '${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:${{ steps.docker_tag.outputs.tag }}'
-            - '${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:latest'
+          tags: |
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:${{ steps.docker_tag.outputs.tag }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:latest
           build-args: 'GIT_DESC=${{steps.tagger.outputs.tag}}'
