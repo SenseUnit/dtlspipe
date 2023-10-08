@@ -1,7 +1,7 @@
 PROGNAME = dtlspipe
 OUTSUFFIX = bin/$(PROGNAME)
 VERSION := $(shell git describe)
-BUILDOPTS = -a -tags netgo -trimpath
+BUILDOPTS = -a -tags netgo -trimpath -asmflags -trimpath
 LDFLAGS = -ldflags '-s -w -extldflags "-static" -X main.version=$(VERSION)'
 LDFLAGS_NATIVE = -ldflags '-s -w -X main.version=$(VERSION)'
 MAIN_PACKAGE = ./cmd/$(PROGNAME)
