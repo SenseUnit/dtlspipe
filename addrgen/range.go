@@ -1,6 +1,7 @@
 package addrgen
 
 import (
+	"errors"
 	"math/big"
 	"math/rand"
 	"net/netip"
@@ -11,11 +12,15 @@ import (
 type AddrRange struct {
 	base *big.Int
 	size *big.Int
+	v6   bool
 }
 
 var _ AddrGetter = &AddrRange{}
 
-func NewAddrRange(start, end netip.Addr) *AddrRange {
+func NewAddrRange(start, end netip.Addr) (*AddrRange, error) {
+	if start.BitLen() != end.BitLen() {
+		return nil, errors.New("addr bit length mismatch - one of them is IPv4, another is IPv6")
+	}
 	if end.Less(start) {
 		return NewAddrRange(end, start)
 	}
@@ -32,7 +37,8 @@ func NewAddrRange(start, end netip.Addr) *AddrRange {
 	return &AddrRange{
 		base: base,
 		size: size,
-	}
+		v6:   start.BitLen() == 128,
+	}, nil
 }
 
 func (ar *AddrRange) Addr() string {
@@ -41,8 +47,12 @@ func (ar *AddrRange) Addr() string {
 		res.Rand(r, ar.size)
 	})
 	res.Add(ar.base, res)
-	var resSlice [16]byte
-	res.FillBytes(resSlice[:])
+	var resArr [16]byte
+	resSlice := resArr[:]
+	if !ar.v6 {
+		resSlice = resSlice[:4]
+	}
+	res.FillBytes(resSlice)
 	resAddr, ok := netip.AddrFromSlice(resSlice[:])
 	if !ok {
 		panic("can't parse address from slice")
