@@ -12,6 +12,12 @@ type RandPool struct {
 	pool sync.Pool
 }
 
+var defaultPool = New()
+
+func Borrow(f func(*rand.Rand)) {
+	defaultPool.Borrow(f)
+}
+
 func MakeRand() *rand.Rand {
 	var seedBuf [8]byte
 	if _, err := crand.Read(seedBuf[:]); err != nil {
