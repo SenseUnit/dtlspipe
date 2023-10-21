@@ -154,11 +154,52 @@ func usage() {
 	fmt.Fprintln(out, "Usage:")
 	fmt.Fprintln(out)
 	fmt.Fprintf(out, "%s [OPTION]... server <BIND ADDRESS> <REMOTE ADDRESS>\n", ProgName)
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "  Run server listening on BIND ADDRESS for DTLS datagrams and forwarding decrypted UDP datagrams to REMOTE ADDRESS.")
+	fmt.Fprintln(out)
 	fmt.Fprintf(out, "%s [OPTION]... client <BIND ADDRESS> <REMOTE ADDRESS>\n", ProgName)
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "  Run client listening on BIND ADDRESS for UDP datagrams and forwarding encrypted DTLS datagrams to REMOTE ADDRESS.")
+	fmt.Fprintln(out)
+	fmt.Fprintf(out, "%s [OPTION]... hoppingclient <BIND ADDRESS> <ENDPOINT GROUP> [ENDPOINT GROUP]...\n", ProgName)
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "  Run client listening on BIND ADDRESS for UDP datagrams and forwarding encrypted DTLS datagrams to a random chosen endpoints.")
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "  Endpoints are specified by a list of one or more ENDPOINT GROUP. ENDPOINT GROUP syntax is defined by following ABNF:")
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "    ENDPOINT-GROUP = address-term *( \",\" address-term ) \":\" Port")
+	fmt.Fprintln(out, "    endpoint-term = Domain / IP-range / IP-prefix / IP-address")
+	fmt.Fprintln(out, "    Domain = <Defined in Section 4.1.2 of [RFC5321]>")
+	fmt.Fprintln(out, "    IP-range = ( IPv4address \"..\" IPv4address ) / ( IPv6address \"..\" IPv6address )")
+	fmt.Fprintln(out, "    IP-prefix = IP-address \"/\" 1*DIGIT")
+	fmt.Fprintln(out, "    IP-address = IPv6address / IPv4address")
+	fmt.Fprintln(out, "    IPv4address = <Defined in Section 4.1 of [RFC5954]>")
+	fmt.Fprintln(out, "    IPv6address = <Defined in Section 4.1 of [RFC5954]>")
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "  Endpoint is chosen randomly as follows.")
+	fmt.Fprintln(out, "  First, random ENDPOINT GROUP is chosen with equal probability.")
+	fmt.Fprintln(out, "  Next, address is chosen from address sets specified by that group, with probability")
+	fmt.Fprintln(out, "  proportional to size of that set. Domain names and single addresses condidered ")
+	fmt.Fprintln(out, "  as sets having size 1, ranges and prefixes have size as count of addresses in it.")
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "  Example: 'example.org:20000-50000' '192.168.0.0/16,10.0.0.0/8,172.16.0.0-172.31.255.255:50000-60000'")
+	fmt.Fprintln(out)
 	fmt.Fprintf(out, "%s [OPTION]... genpsk\n", ProgName)
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "  Generate and output PSK.")
+	fmt.Fprintln(out)
 	fmt.Fprintf(out, "%s ciphers\n", ProgName)
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "  Print list of supported ciphers and exit.")
+	fmt.Fprintln(out)
 	fmt.Fprintf(out, "%s curves\n", ProgName)
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "  Print list of supported elliptic curves and exit.")
+	fmt.Fprintln(out)
 	fmt.Fprintf(out, "%s version\n", ProgName)
+	fmt.Fprintln(out)
+	fmt.Fprintln(out, "  Print program version and exit.")
+	fmt.Fprintln(out)
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Options:")
 	flag.PrintDefaults()
@@ -220,6 +261,11 @@ func cmdClient(bindAddress, remoteAddress string) int {
 
 	<-appCtx.Done()
 
+	return 0
+}
+
+func cmdHoppingClient(args []string) int {
+	fmt.Println(args)
 	return 0
 }
 
@@ -290,6 +336,9 @@ func run() int {
 	}
 
 	switch len(args) {
+	case 0:
+		usage()
+		return 2
 	case 1:
 		switch args[0] {
 		case "genpsk":
@@ -301,6 +350,9 @@ func run() int {
 		case "version":
 			return cmdVersion()
 		}
+	case 2:
+		usage()
+		return 2
 	case 3:
 		switch args[0] {
 		case "server":
@@ -308,6 +360,10 @@ func run() int {
 		case "client":
 			return cmdClient(args[1], args[2])
 		}
+	}
+	switch args[0] {
+	case "hoppingclient":
+		return cmdHoppingClient(args[1:])
 	}
 	usage()
 	return 2
