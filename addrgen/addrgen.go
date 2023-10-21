@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"math/rand"
 	"net"
+	"slices"
 	"strconv"
 	"strings"
 
@@ -25,6 +26,7 @@ type PortGetter interface {
 type AddrSet struct {
 	portRange  PortGetter
 	addrRanges []AddrGetter
+	cumWeights []*big.Int
 }
 
 func ParseAddrSet(spec string) (*AddrSet, error) {
@@ -51,19 +53,34 @@ func ParseAddrSet(spec string) (*AddrSet, error) {
 	if len(addrRanges) == 0 {
 		return nil, errors.New("no valid address ranges specified")
 	}
+
+	cumWeights := make([]*big.Int, len(addrRanges))
+	currSum := new(big.Int)
+	for i, r := range addrRanges {
+		currSum.Add(currSum, r.Power())
+		cumWeights[i] = new(big.Int).Set(currSum)
+	}
 	return &AddrSet{
 		portRange:  portRange,
 		addrRanges: addrRanges,
+		cumWeights: cumWeights,
 	}, nil
 }
 
 func (as *AddrSet) Endpoint() string {
 	port := as.portRange.Port()
 	count := len(as.addrRanges)
-	var idx int
+	limit := as.cumWeights[count-1]
+	random := new(big.Int)
 	randpool.Borrow(func(r *rand.Rand) {
-		idx = r.Intn(count)
+		random.Rand(r, limit)
 	})
+	idx, found := slices.BinarySearchFunc(as.cumWeights, random, func(elem, target *big.Int) int {
+		return elem.Cmp(target)
+	})
+	if found {
+		idx++
+	}
 	addr := as.addrRanges[idx].Addr()
 	return net.JoinHostPort(addr, strconv.FormatUint(uint64(port), 10))
 }
