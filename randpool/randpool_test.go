@@ -37,5 +37,4 @@ func TestBorrow(t *testing.T) {
 			t.Errorf("arr[%d]=%d too far from mx=%.3f", i, arr[i], mx)
 		}
 	}
-
 }
