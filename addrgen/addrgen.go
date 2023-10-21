@@ -4,7 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"math/rand"
+	"net"
+	"strconv"
 	"strings"
+
+	"github.com/Snawoot/dtlspipe/randpool"
 )
 
 type AddrGetter interface {
@@ -43,8 +48,22 @@ func ParseAddrSet(spec string) (*AddrSet, error) {
 		}
 		addrRanges = append(addrRanges, r)
 	}
+	if len(addrRanges) == 0 {
+		return nil, errors.New("no valid address ranges specified")
+	}
 	return &AddrSet{
-		portRange: portRange,
+		portRange:  portRange,
 		addrRanges: addrRanges,
 	}, nil
+}
+
+func (as *AddrSet) Endpoint() string {
+	port := as.portRange.Port()
+	count := len(as.addrRanges)
+	var idx int
+	randpool.Borrow(func(r *rand.Rand) {
+		idx = r.Intn(count)
+	})
+	addr := as.addrRanges[idx].Addr()
+	return net.JoinHostPort(addr, strconv.FormatUint(uint64(port), 10))
 }
