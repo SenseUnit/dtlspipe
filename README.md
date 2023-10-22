@@ -62,15 +62,55 @@ dtlspipe server skips HelloVerify message by default in order to workaround some
 ## Synopsis
 
 ```
-$ dtlspipe -h
 Usage:
 
 dtlspipe [OPTION]... server <BIND ADDRESS> <REMOTE ADDRESS>
+
+  Run server listening on BIND ADDRESS for DTLS datagrams and forwarding decrypted UDP datagrams to REMOTE ADDRESS.
+
 dtlspipe [OPTION]... client <BIND ADDRESS> <REMOTE ADDRESS>
+
+  Run client listening on BIND ADDRESS for UDP datagrams and forwarding encrypted DTLS datagrams to REMOTE ADDRESS.
+
+dtlspipe [OPTION]... hoppingclient <BIND ADDRESS> <ENDPOINT GROUP> [ENDPOINT GROUP]...
+
+  Run client listening on BIND ADDRESS for UDP datagrams and forwarding encrypted DTLS datagrams to a random chosen endpoints.
+
+  Endpoints are specified by a list of one or more ENDPOINT GROUP. ENDPOINT GROUP syntax is defined by following ABNF:
+
+    ENDPOINT-GROUP = address-term *( "," address-term ) ":" Port
+    endpoint-term = Domain / IP-range / IP-prefix / IP-address
+    Domain = <Defined in Section 4.1.2 of [RFC5321]>
+    IP-range = ( IPv4address ".." IPv4address ) / ( IPv6address ".." IPv6address )
+    IP-prefix = IP-address "/" 1*DIGIT
+    IP-address = IPv6address / IPv4address
+    IPv4address = <Defined in Section 4.1 of [RFC5954]>
+    IPv6address = <Defined in Section 4.1 of [RFC5954]>
+
+  Endpoint is chosen randomly as follows.
+  First, random ENDPOINT GROUP is chosen with equal probability.
+  Next, address is chosen from address sets specified by that group, with probability
+  proportional to size of that set. Domain names and single addresses condidered 
+  as sets having size 1, ranges and prefixes have size as count of addresses in it.
+
+  Example: 'example.org:20000-50000' '192.168.0.0/16,10.0.0.0/8,172.16.0.0-172.31.255.255:50000-60000'
+
 dtlspipe [OPTION]... genpsk
+
+  Generate and output PSK.
+
 dtlspipe ciphers
+
+  Print list of supported ciphers and exit.
+
 dtlspipe curves
+
+  Print list of supported elliptic curves and exit.
+
 dtlspipe version
+
+  Print program version and exit.
+
 
 Options:
   -ciphers value
