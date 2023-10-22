@@ -170,3 +170,22 @@ func TimeLimitFunc(low, high time.Duration) func() time.Duration {
 		return low + time.Duration(r.Int63n(int64(delta)))
 	}
 }
+
+type DynDialer struct {
+	dial func(context.Context, string, string) (net.Conn, error)
+	ep   func() string
+}
+
+func NewDynDialer(ep func() string, dial func(context.Context, string, string) (net.Conn, error)) DynDialer {
+	if dial == nil {
+		dial = (&net.Dialer{}).DialContext
+	}
+	return DynDialer{
+		ep:   ep,
+		dial: dial,
+	}
+}
+
+func (d DynDialer) DialContext(ctx context.Context, network string) (net.Conn, error) {
+	return d.dial(ctx, network, d.ep())
+}

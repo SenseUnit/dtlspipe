@@ -11,7 +11,7 @@ import (
 
 type Config struct {
 	BindAddress    string
-	RemoteAddress  string
+	RemoteDialFunc func(ctx context.Context, network string) (net.Conn, error)
 	Timeout        time.Duration
 	IdleTimeout    time.Duration
 	BaseContext    context.Context
