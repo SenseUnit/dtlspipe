@@ -62,6 +62,7 @@ dtlspipe server skips HelloVerify message by default in order to workaround some
 ## Synopsis
 
 ```
+$ dtlspipe -h
 Usage:
 
 dtlspipe [OPTION]... server <BIND ADDRESS> <REMOTE ADDRESS>
