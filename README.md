@@ -112,7 +112,6 @@ dtlspipe version
 
   Print program version and exit.
 
-
 Options:
   -ciphers value
     	colon-separated list of ciphers to use

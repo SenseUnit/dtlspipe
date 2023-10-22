@@ -201,7 +201,6 @@ func usage() {
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "  Print program version and exit.")
 	fmt.Fprintln(out)
-	fmt.Fprintln(out)
 	fmt.Fprintln(out, "Options:")
 	flag.PrintDefaults()
 }
