@@ -22,7 +22,7 @@ const (
 type Client struct {
 	listener      net.Listener
 	dtlsConfig    *dtls.Config
-	rAddr         string
+	remoteDialFn  func(context.Context, string) (net.Conn, error)
 	psk           func([]byte) ([]byte, error)
 	timeout       time.Duration
 	idleTimeout   time.Duration
@@ -40,7 +40,7 @@ func New(cfg *Config) (*Client, error) {
 	baseCtx, cancelCtx := context.WithCancel(cfg.BaseContext)
 
 	client := &Client{
-		rAddr:         cfg.RemoteAddress,
+		remoteDialFn:  cfg.RemoteDialFunc,
 		timeout:       cfg.Timeout,
 		psk:           cfg.PSKCallback,
 		idleTimeout:   cfg.IdleTimeout,
@@ -119,7 +119,7 @@ func (client *Client) serve(conn net.Conn) {
 
 	dialCtx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
-	remoteConn, err := (&net.Dialer{}).DialContext(dialCtx, "udp", client.rAddr)
+	remoteConn, err := client.remoteDialFn(dialCtx, "udp")
 	if err != nil {
 		log.Printf("remote dial failed: %v", err)
 		return

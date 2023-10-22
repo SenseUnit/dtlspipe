@@ -99,6 +99,7 @@ func (as *AddrSet) Power() *big.Int {
 }
 
 var _ EndpointGen = EqualMultiEndpointGen(nil)
+
 type EqualMultiEndpointGen []EndpointGen
 
 func NewEqualMultiEndpointGen(gens ...EndpointGen) (EqualMultiEndpointGen, error) {
@@ -137,6 +138,7 @@ func (g EqualMultiEndpointGen) Power() *big.Int {
 }
 
 var _ EndpointGen = SingleEndpoint("")
+
 type SingleEndpoint string
 
 func (e SingleEndpoint) Endpoint() string {

@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/Snawoot/dtlspipe/addrgen"
 	"github.com/Snawoot/dtlspipe/ciphers"
 	"github.com/Snawoot/dtlspipe/client"
 	"github.com/Snawoot/dtlspipe/keystore"
@@ -238,8 +239,11 @@ func cmdClient(bindAddress, remoteAddress string) int {
 	defer cancel()
 
 	cfg := client.Config{
-		BindAddress:    bindAddress,
-		RemoteAddress:  remoteAddress,
+		BindAddress: bindAddress,
+		RemoteDialFunc: util.NewDynDialer(
+			addrgen.SingleEndpoint(remoteAddress).Endpoint,
+			nil,
+		).DialContext,
 		PSKCallback:    keystore.NewStaticKeystore(psk).PSKCallback,
 		PSKIdentity:    *identity,
 		Timeout:        *timeout,
