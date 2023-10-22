@@ -80,7 +80,7 @@ dtlspipe [OPTION]... hoppingclient <BIND ADDRESS> <ENDPOINT GROUP> [ENDPOINT GRO
   Endpoints are specified by a list of one or more ENDPOINT GROUP. ENDPOINT GROUP syntax is defined by following ABNF:
 
     ENDPOINT-GROUP = address-term *( "," address-term ) ":" Port
-    endpoint-term = Domain / IP-range / IP-prefix / IP-address
+    address-term = Domain / IP-range / IP-prefix / IP-address
     Domain = <Defined in Section 4.1.2 of [RFC5321]>
     IP-range = ( IPv4address ".." IPv4address ) / ( IPv6address ".." IPv6address )
     IP-prefix = IP-address "/" 1*DIGIT

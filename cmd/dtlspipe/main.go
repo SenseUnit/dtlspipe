@@ -169,7 +169,7 @@ func usage() {
 	fmt.Fprintln(out, "  Endpoints are specified by a list of one or more ENDPOINT GROUP. ENDPOINT GROUP syntax is defined by following ABNF:")
 	fmt.Fprintln(out)
 	fmt.Fprintln(out, "    ENDPOINT-GROUP = address-term *( \",\" address-term ) \":\" Port")
-	fmt.Fprintln(out, "    endpoint-term = Domain / IP-range / IP-prefix / IP-address")
+	fmt.Fprintln(out, "    address-term = Domain / IP-range / IP-prefix / IP-address")
 	fmt.Fprintln(out, "    Domain = <Defined in Section 4.1.2 of [RFC5321]>")
 	fmt.Fprintln(out, "    IP-range = ( IPv4address \"..\" IPv4address ) / ( IPv6address \"..\" IPv6address )")
 	fmt.Fprintln(out, "    IP-prefix = IP-address \"/\" 1*DIGIT")
