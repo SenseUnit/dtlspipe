@@ -269,7 +269,56 @@ func cmdClient(bindAddress, remoteAddress string) int {
 }
 
 func cmdHoppingClient(args []string) int {
-	fmt.Println(args)
+	bindAddress := args[0]
+	args = args[1:]
+	psk, err := simpleGetPSK()
+	if err != nil {
+		log.Printf("can't get PSK: %v", err)
+		return 2
+	}
+	log.Printf("starting dtlspipe client: %s =[wrap into DTLS]=> %v", bindAddress, args)
+	defer log.Println("dtlspipe client stopped")
+
+	appCtx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
+	defer cancel()
+
+	gen, err := addrgen.EqualMultiEndpointGenFromSpecs(args)
+	if err != nil {
+		log.Printf("can't construct generator: %v", err)
+		return 2
+	}
+
+	cfg := client.Config{
+		BindAddress: bindAddress,
+		RemoteDialFunc: util.NewDynDialer(
+			func() string {
+				ep := gen.Endpoint()
+				log.Printf("attempting endpoint %s...", ep)
+				return ep
+			},
+			nil,
+		).DialContext,
+		PSKCallback:    keystore.NewStaticKeystore(psk).PSKCallback,
+		PSKIdentity:    *identity,
+		Timeout:        *timeout,
+		IdleTimeout:    *idleTime,
+		BaseContext:    appCtx,
+		MTU:            *mtu,
+		CipherSuites:   ciphersuites.Value,
+		EllipticCurves: curves.Value,
+		StaleMode:      staleMode,
+		TimeLimitFunc:  util.TimeLimitFunc(timeLimit.low, timeLimit.high),
+		AllowFunc:      util.AllowByRatelimit(rateLimit.value),
+	}
+
+	clt, err := client.New(&cfg)
+	if err != nil {
+		log.Fatalf("client startup failed: %v", err)
+	}
+	defer clt.Close()
+
+	<-appCtx.Done()
+
 	return 0
 }
 
