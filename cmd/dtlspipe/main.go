@@ -293,7 +293,7 @@ func cmdHoppingClient(args []string) int {
 		RemoteDialFunc: util.NewDynDialer(
 			func() string {
 				ep := gen.Endpoint()
-				log.Printf("attempting endpoint %s...", ep)
+				log.Printf("selected new endpoint %s", ep)
 				return ep
 			},
 			nil,
