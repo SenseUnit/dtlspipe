@@ -9,7 +9,7 @@ import (
 	"github.com/Snawoot/dtlspipe/randpool"
 )
 
-var _ PortGetter = PortRange{}
+var _ PortGen = PortRange{}
 
 type PortRange struct {
 	portBase uint16
@@ -38,7 +38,7 @@ func (p PortRange) Power() uint16 {
 	return p.portNum
 }
 
-var _ PortGetter = SinglePort(0)
+var _ PortGen = SinglePort(0)
 
 type SinglePort uint16
 
@@ -50,7 +50,7 @@ func (p SinglePort) Power() uint16 {
 	return 1
 }
 
-func ParsePortRangeSpec(spec string) (PortGetter, error) {
+func ParsePortRangeSpec(spec string) (PortGen, error) {
 	parts := strings.SplitN(spec, "-", 2)
 	switch len(parts) {
 	case 1:

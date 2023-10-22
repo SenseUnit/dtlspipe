@@ -17,7 +17,7 @@ type AddrRange struct {
 	v6   bool
 }
 
-var _ AddrGetter = &AddrRange{}
+var _ AddrGen = &AddrRange{}
 
 func NewAddrRange(start, end netip.Addr) (*AddrRange, error) {
 	if start.BitLen() != end.BitLen() {
@@ -86,7 +86,7 @@ func (ar *AddrRange) Power() *big.Int {
 	return res
 }
 
-func ParseAddrRangeSpec(spec string) (AddrGetter, error) {
+func ParseAddrRangeSpec(spec string) (AddrGen, error) {
 	switch {
 	case strings.Contains(spec, "/"):
 		pfx, err := netip.ParsePrefix(spec)

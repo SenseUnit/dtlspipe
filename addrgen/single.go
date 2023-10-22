@@ -4,7 +4,7 @@ import "math/big"
 
 type SingleAddr string
 
-var _ AddrGetter = SingleAddr("")
+var _ AddrGen = SingleAddr("")
 
 func (n SingleAddr) Addr() string {
 	return string(n)
