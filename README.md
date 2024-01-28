@@ -14,7 +14,7 @@ Generic DTLS wrapper for UDP sessions. Like `stunnel`, but for UDP. Suitable for
 
 ### Binaries
 
-Pre-built binaries are available [here](https://github.com/Snawoot/dtlspipe/releases/latest).
+Pre-built binaries are available [here](https://github.com/SenseUnit/dtlspipe/releases/latest).
 
 ### Build from source
 
@@ -143,5 +143,5 @@ Options:
 
 ## See also
 
-* [Project Wiki](https://github.com/Snawoot/dtlspipe/wiki)
+* [Project Wiki](https://github.com/SenseUnit/dtlspipe/wiki)
 * [Community in Telegram](https://t.me/dtlspipe)

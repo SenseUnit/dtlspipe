@@ -5,8 +5,8 @@ import (
 	"net"
 	"time"
 
-	"github.com/Snawoot/dtlspipe/ciphers"
-	"github.com/Snawoot/dtlspipe/util"
+	"github.com/SenseUnit/dtlspipe/ciphers"
+	"github.com/SenseUnit/dtlspipe/util"
 )
 
 type Config struct {

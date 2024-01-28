@@ -10,7 +10,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Snawoot/dtlspipe/randpool"
+	"github.com/SenseUnit/dtlspipe/randpool"
 )
 
 type AddrGen interface {

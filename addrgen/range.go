@@ -8,7 +8,7 @@ import (
 	"net/netip"
 	"strings"
 
-	"github.com/Snawoot/dtlspipe/randpool"
+	"github.com/SenseUnit/dtlspipe/randpool"
 )
 
 type AddrRange struct {

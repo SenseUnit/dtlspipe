@@ -14,12 +14,12 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Snawoot/dtlspipe/addrgen"
-	"github.com/Snawoot/dtlspipe/ciphers"
-	"github.com/Snawoot/dtlspipe/client"
-	"github.com/Snawoot/dtlspipe/keystore"
-	"github.com/Snawoot/dtlspipe/server"
-	"github.com/Snawoot/dtlspipe/util"
+	"github.com/SenseUnit/dtlspipe/addrgen"
+	"github.com/SenseUnit/dtlspipe/ciphers"
+	"github.com/SenseUnit/dtlspipe/client"
+	"github.com/SenseUnit/dtlspipe/keystore"
+	"github.com/SenseUnit/dtlspipe/server"
+	"github.com/SenseUnit/dtlspipe/util"
 	"github.com/Snawoot/rlzone"
 )
 

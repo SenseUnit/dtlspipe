@@ -1,4 +1,4 @@
-module github.com/Snawoot/dtlspipe
+module github.com/SenseUnit/dtlspipe
 
 go 1.21.1
 
