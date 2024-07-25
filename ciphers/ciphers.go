@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pion/dtls/v2"
+	"github.com/pion/dtls/v3"
 )
 
 type CipherList = []dtls.CipherSuiteID

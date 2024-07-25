@@ -133,15 +133,15 @@ func NetAddrToNetipAddrPort(a net.Addr) netip.AddrPort {
 	return res
 }
 
-func AllowAllFunc(_, _ net.Addr) bool {
+func AllowAllFunc(_ net.Addr) bool {
 	return true
 }
 
-func AllowByRatelimit(z rlzone.Ratelimiter[netip.Addr]) func(net.Addr, net.Addr) bool {
+func AllowByRatelimit(z rlzone.Ratelimiter[netip.Addr]) func(net.Addr) bool {
 	if z == nil {
 		return AllowAllFunc
 	}
-	return func(_, remoteAddr net.Addr) bool {
+	return func(remoteAddr net.Addr) bool {
 		key := NetAddrToNetipAddrPort(remoteAddr).Addr()
 		return z.Allow(key)
 	}
@@ -172,20 +172,40 @@ func TimeLimitFunc(low, high time.Duration) func() time.Duration {
 }
 
 type DynDialer struct {
-	dial func(context.Context, string, string) (net.Conn, error)
-	ep   func() string
+	ep       func() string
+	resolver *net.Resolver
 }
 
-func NewDynDialer(ep func() string, dial func(context.Context, string, string) (net.Conn, error)) DynDialer {
-	if dial == nil {
-		dial = (&net.Dialer{}).DialContext
-	}
+func NewDynDialer(ep func() string) DynDialer {
 	return DynDialer{
-		ep:   ep,
-		dial: dial,
+		resolver: new(net.Resolver),
+		ep:       ep,
 	}
 }
 
-func (d DynDialer) DialContext(ctx context.Context, network string) (net.Conn, error) {
-	return d.dial(ctx, network, d.ep())
+func (d DynDialer) DialContext(ctx context.Context) (net.PacketConn, net.Addr, error) {
+	host, port, err := net.SplitHostPort(d.ep())
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to split host and port: %w", err)
+	}
+	addrs, err := d.resolver.LookupIPAddr(ctx, host)
+	if err != nil {
+		return nil, nil, fmt.Errorf("address lookup failed: %w", err)
+	}
+	if len(addrs) == 0 {
+		return nil, nil, fmt.Errorf("no addresses were resolved")
+	}
+	portNum, err := d.resolver.LookupPort(ctx, "udp", port)
+	if err != nil {
+		return nil, nil, fmt.Errorf("port lookup failed: %w", err)
+	}
+	pConn, err := net.ListenUDP("udp", nil)
+	if err != nil {
+		return nil, nil, fmt.Errorf("unable to open UDP socket: %w", err)
+	}
+	return pConn, &net.UDPAddr{
+		IP:   addrs[0].IP,
+		Port: portNum,
+		Zone: addrs[0].Zone,
+	}, nil
 }

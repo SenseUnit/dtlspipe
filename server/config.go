@@ -22,7 +22,7 @@ type Config struct {
 	EllipticCurves  ciphers.CurveList
 	StaleMode       util.StaleMode
 	TimeLimitFunc   func() time.Duration
-	AllowFunc       func(localAddr, remoteAddr net.Addr) bool
+	AllowFunc       func(net.Addr) bool
 }
 
 func (cfg *Config) populateDefaults() *Config {
