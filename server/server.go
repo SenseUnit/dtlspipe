@@ -64,7 +64,7 @@ func New(cfg *Config) (*Server, error) {
 		InsecureSkipVerifyHello: cfg.SkipHelloVerify,
 		CipherSuites:            cfg.CipherSuites,
 		EllipticCurves:          cfg.EllipticCurves,
-		OnConnectionAttempt:     func(a net.Addr) error {
+		OnConnectionAttempt: func(a net.Addr) error {
 			if !srv.allowFunc(a) {
 				return fmt.Errorf("address %s was not allowed by limiter", a.String())
 			}
