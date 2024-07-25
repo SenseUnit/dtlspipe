@@ -19,6 +19,7 @@ const (
 
 type Server struct {
 	listener      net.Listener
+	dialer        *net.Dialer
 	dtlsConfig    *dtls.Config
 	rAddr         string
 	psk           func([]byte) ([]byte, error)
@@ -38,6 +39,7 @@ func New(cfg *Config) (*Server, error) {
 	baseCtx, cancelCtx := context.WithCancel(cfg.BaseContext)
 
 	srv := &Server{
+		dialer:        new(net.Dialer),
 		rAddr:         cfg.RemoteAddress,
 		timeout:       cfg.Timeout,
 		psk:           cfg.PSKCallback,
@@ -125,9 +127,11 @@ func (srv *Server) serve(conn net.Conn) {
 		ctx = newCtx
 	}
 
-	dialCtx, cancel := context.WithTimeout(ctx, srv.timeout)
-	defer cancel()
-	remoteConn, err := (&net.Dialer{}).DialContext(dialCtx, "udp", srv.rAddr)
+	remoteConn, err := func() (net.Conn, error) {
+		dialCtx, cancel := context.WithTimeout(ctx, srv.timeout)
+		defer cancel()
+		return srv.dialer.DialContext(dialCtx, "udp", srv.rAddr)
+	}()
 	if err != nil {
 		log.Printf("remote dial failed: %v", err)
 		return
