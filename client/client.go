@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/SenseUnit/dtlspipe/util"
-	"github.com/pion/dtls/v2"
-	"github.com/pion/transport/v2/udp"
+	"github.com/pion/dtls/v3"
+	"github.com/pion/transport/v3/udp"
 )
 
 const (
@@ -22,7 +22,7 @@ const (
 type Client struct {
 	listener      net.Listener
 	dtlsConfig    *dtls.Config
-	remoteDialFn  func(context.Context, string) (net.Conn, error)
+	remoteDialFn  func(context.Context) (net.PacketConn, net.Addr, error)
 	psk           func([]byte) ([]byte, error)
 	timeout       time.Duration
 	idleTimeout   time.Duration
@@ -31,7 +31,7 @@ type Client struct {
 	staleMode     util.StaleMode
 	workerWG      sync.WaitGroup
 	timeLimitFunc func() time.Duration
-	allowFunc     func(net.Addr, net.Addr) bool
+	allowFunc     func(net.Addr) bool
 }
 
 func New(cfg *Config) (*Client, error) {
@@ -59,7 +59,6 @@ func New(cfg *Config) (*Client, error) {
 
 	client.dtlsConfig = &dtls.Config{
 		ExtendedMasterSecret: dtls.RequireExtendedMasterSecret,
-		ConnectContextMaker:  client.contextMaker,
 		PSK:                  client.psk,
 		PSKIdentityHint:      []byte(cfg.PSKIdentity),
 		MTU:                  cfg.MTU,
@@ -91,7 +90,7 @@ func (client *Client) listen() {
 			continue
 		}
 
-		if !client.allowFunc(conn.LocalAddr(), conn.RemoteAddr()) {
+		if !client.allowFunc(conn.RemoteAddr()) {
 			continue
 		}
 
@@ -119,24 +118,26 @@ func (client *Client) serve(conn net.Conn) {
 
 	dialCtx, cancel := context.WithTimeout(ctx, client.timeout)
 	defer cancel()
-	remoteConn, err := client.remoteDialFn(dialCtx, "udp")
+	remoteConn, remoteAddr, err := client.remoteDialFn(dialCtx)
 	if err != nil {
 		log.Printf("remote dial failed: %v", err)
 		return
 	}
 	defer remoteConn.Close()
 
-	remoteConn, err = dtls.ClientWithContext(dialCtx, remoteConn, client.dtlsConfig)
+	dtlsConn, err := dtls.Client(remoteConn, remoteAddr, client.dtlsConfig)
 	if err != nil {
+		log.Printf("DTLS connection with remote server failed: %v", err)
+		return
+	}
+	defer dtlsConn.Close()
+
+	if err := dtlsConn.HandshakeContext(dialCtx); err != nil {
 		log.Printf("DTLS handshake with remote server failed: %v", err)
 		return
 	}
 
-	util.PairConn(ctx, conn, remoteConn, client.idleTimeout, client.staleMode)
-}
-
-func (client *Client) contextMaker() (context.Context, func()) {
-	return context.WithTimeout(client.baseCtx, client.timeout)
+	util.PairConn(ctx, conn, dtlsConn, client.idleTimeout, client.staleMode)
 }
 
 func (client *Client) Close() error {

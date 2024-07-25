@@ -241,7 +241,6 @@ func cmdClient(bindAddress, remoteAddress string) int {
 		BindAddress: bindAddress,
 		RemoteDialFunc: util.NewDynDialer(
 			addrgen.SingleEndpoint(remoteAddress).Endpoint,
-			nil,
 		).DialContext,
 		PSKCallback:    keystore.NewStaticKeystore(psk).PSKCallback,
 		PSKIdentity:    *identity,
@@ -295,7 +294,6 @@ func cmdHoppingClient(args []string) int {
 				log.Printf("selected new endpoint %s", ep)
 				return ep
 			},
-			nil,
 		).DialContext,
 		PSKCallback:    keystore.NewStaticKeystore(psk).PSKCallback,
 		PSKIdentity:    *identity,

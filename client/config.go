@@ -11,7 +11,7 @@ import (
 
 type Config struct {
 	BindAddress    string
-	RemoteDialFunc func(ctx context.Context, network string) (net.Conn, error)
+	RemoteDialFunc func(ctx context.Context) (net.PacketConn, net.Addr, error)
 	Timeout        time.Duration
 	IdleTimeout    time.Duration
 	BaseContext    context.Context
@@ -22,7 +22,7 @@ type Config struct {
 	EllipticCurves ciphers.CurveList
 	StaleMode      util.StaleMode
 	TimeLimitFunc  func() time.Duration
-	AllowFunc      func(localAddr, remoteAddr net.Addr) bool
+	AllowFunc      func(net.Addr) bool
 }
 
 func (cfg *Config) populateDefaults() *Config {
