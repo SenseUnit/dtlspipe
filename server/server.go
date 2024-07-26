@@ -71,6 +71,9 @@ func New(cfg *Config) (*Server, error) {
 			return nil
 		},
 	}
+	if cfg.EnableCID {
+		srv.dtlsConfig.ConnectionIDGenerator = dtls.RandomCIDGenerator(8)
+	}
 	srv.listener, err = dtls.Listen("udp", net.UDPAddrFromAddrPort(lAddrPort), srv.dtlsConfig)
 	if err != nil {
 		cancelCtx()

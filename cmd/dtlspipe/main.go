@@ -135,6 +135,7 @@ var (
 	mtu             = flag.Int("mtu", 1400, "MTU used for DTLS fragments")
 	cpuprofile      = flag.String("cpuprofile", "", "write cpu profile to file")
 	skipHelloVerify = flag.Bool("skip-hello-verify", true, "(server only) skip hello verify request. Useful to workaround DPI")
+	connectionIDExt = flag.Bool("cid", true, "enable connection_id extension")
 	ciphersuites    = cipherlistArg{}
 	curves          = curvelistArg{}
 	staleMode       = util.EitherStale
@@ -253,6 +254,7 @@ func cmdClient(bindAddress, remoteAddress string) int {
 		StaleMode:      staleMode,
 		TimeLimitFunc:  util.TimeLimitFunc(timeLimit.low, timeLimit.high),
 		AllowFunc:      util.AllowByRatelimit(rateLimit.value),
+		EnableCID:      *connectionIDExt,
 	}
 
 	clt, err := client.New(&cfg)
@@ -306,6 +308,7 @@ func cmdHoppingClient(args []string) int {
 		StaleMode:      staleMode,
 		TimeLimitFunc:  util.TimeLimitFunc(timeLimit.low, timeLimit.high),
 		AllowFunc:      util.AllowByRatelimit(rateLimit.value),
+		EnableCID:      *connectionIDExt,
 	}
 
 	clt, err := client.New(&cfg)
@@ -345,6 +348,7 @@ func cmdServer(bindAddress, remoteAddress string) int {
 		StaleMode:       staleMode,
 		TimeLimitFunc:   util.TimeLimitFunc(timeLimit.low, timeLimit.high),
 		AllowFunc:       util.AllowByRatelimit(rateLimit.value),
+		EnableCID:       *connectionIDExt,
 	}
 
 	srv, err := server.New(&cfg)

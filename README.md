@@ -113,6 +113,8 @@ dtlspipe version
   Print program version and exit.
 
 Options:
+  -cid
+    	enable connection_id extension (default true)
   -ciphers value
     	colon-separated list of ciphers to use
   -cpuprofile string
