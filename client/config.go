@@ -23,6 +23,7 @@ type Config struct {
 	StaleMode      util.StaleMode
 	TimeLimitFunc  func() time.Duration
 	AllowFunc      func(net.Addr) bool
+	EnableCID      bool
 }
 
 func (cfg *Config) populateDefaults() *Config {
