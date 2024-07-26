@@ -65,6 +65,10 @@ func New(cfg *Config) (*Client, error) {
 		CipherSuites:         cfg.CipherSuites,
 		EllipticCurves:       cfg.EllipticCurves,
 	}
+	if cfg.EnableCID {
+		client.dtlsConfig.ConnectionIDGenerator = dtls.OnlySendCIDGenerator()
+	}
+
 	lc := udp.ListenConfig{
 		Backlog: Backlog,
 	}
