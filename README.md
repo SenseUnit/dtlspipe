@@ -146,4 +146,4 @@ Options:
 ## See also
 
 * [Project Wiki](https://github.com/SenseUnit/dtlspipe/wiki)
-* [Community in Telegram](https://t.me/dtlspipe)
+* [Community in Telegram](https://t.me/alternative_proxy/8557)
