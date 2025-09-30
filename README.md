@@ -43,7 +43,15 @@ Few notes:
 
 ### Wireguard
 
-dtlspipe setup can be done using example for generic case, but more specifically, dtlspipe server should point to the wireguard server port and wireguard client should communicate with port of dtlspipe client.
+dtlspipe setup can be done using example for generic case, but more specifically, dtlspipe server should point to the wireguard server port and wireguard client should communicate with port of dtlspipe client. Following diagram illustrates required setup:
+
+```
+┌────────┐      ┌────────┐                            ┌────────┐      ┌────────┐
+│   WG   │      │dtlspipe│                            │dtlspipe│      │   WG   │
+│        ├─────►│        ├───── ... Internet ... ────►│        ├─────►│        │
+│ client │      │ client │                            │ server │      │ server │
+└────────┘      └────────┘                            └────────┘      └────────┘
+```
 
 You need to make following adjustments to wireguard client config:
 
