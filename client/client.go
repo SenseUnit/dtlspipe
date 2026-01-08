@@ -11,7 +11,7 @@ import (
 
 	"github.com/SenseUnit/dtlspipe/util"
 	"github.com/pion/dtls/v3"
-	"github.com/pion/transport/v3/udp"
+	"github.com/pion/transport/v4/udp"
 )
 
 const (
