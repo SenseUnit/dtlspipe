@@ -6,7 +6,7 @@ toolchain go1.24.6
 
 require (
 	github.com/Snawoot/rlzone v0.2.0
-	github.com/pion/dtls/v3 v3.1.0
+	github.com/pion/dtls/v3 v3.1.2
 	github.com/pion/transport/v4 v4.0.1
 )
 
