@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/Snawoot/rlzone v0.2.0
-	github.com/pion/dtls/v3 v3.1.3
+	github.com/pion/dtls/v3 v3.1.4
 	github.com/pion/transport/v4 v4.0.2
 )
 
