@@ -7,6 +7,7 @@ import (
 
 	"github.com/SenseUnit/dtlspipe/ciphers"
 	"github.com/SenseUnit/dtlspipe/util"
+	"github.com/pion/dtls/v4"
 )
 
 type Config struct {
@@ -15,8 +16,7 @@ type Config struct {
 	Timeout        time.Duration
 	IdleTimeout    time.Duration
 	BaseContext    context.Context
-	PSKCallback    func([]byte) ([]byte, error)
-	PSKIdentity    string
+	PSKCallback    dtls.PSKClientCallback
 	MTU            int
 	CipherSuites   ciphers.CipherList
 	EllipticCurves ciphers.CurveList

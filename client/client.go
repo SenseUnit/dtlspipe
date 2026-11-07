@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/SenseUnit/dtlspipe/util"
-	"github.com/pion/dtls/v3"
+	"github.com/pion/dtls/v4"
 	"github.com/pion/transport/v4/udp"
 )
 
@@ -21,9 +21,8 @@ const (
 
 type Client struct {
 	listener      net.Listener
-	dtlsConfig    *dtls.Config
 	remoteDialFn  func(context.Context) (net.PacketConn, net.Addr, error)
-	psk           func([]byte) ([]byte, error)
+	opts          []dtls.ClientOption
 	timeout       time.Duration
 	idleTimeout   time.Duration
 	baseCtx       context.Context
@@ -42,31 +41,28 @@ func New(cfg *Config) (*Client, error) {
 	client := &Client{
 		remoteDialFn:  cfg.RemoteDialFunc,
 		timeout:       cfg.Timeout,
-		psk:           cfg.PSKCallback,
 		idleTimeout:   cfg.IdleTimeout,
 		baseCtx:       baseCtx,
 		cancelCtx:     cancelCtx,
 		staleMode:     cfg.StaleMode,
 		timeLimitFunc: cfg.TimeLimitFunc,
 		allowFunc:     cfg.AllowFunc,
+		opts: []dtls.ClientOption{
+			dtls.WithExtendedMasterSecret(dtls.RequireExtendedMasterSecret),
+			dtls.WithPSK(cfg.PSKCallback, nil),
+			dtls.WithMTU(cfg.MTU),
+			dtls.WithCipherSuites(cfg.CipherSuites...),
+			dtls.WithEllipticCurves(cfg.EllipticCurves...),
+		},
+	}
+	if cfg.EnableCID {
+		client.opts = append(client.opts, dtls.WithConnectionID(dtls.OnlySendCIDGenerator(), dtls.CIDPathMigrationUnsafe))
 	}
 
 	lAddrPort, err := netip.ParseAddrPort(cfg.BindAddress)
 	if err != nil {
 		cancelCtx()
 		return nil, fmt.Errorf("can't parse bind address: %w", err)
-	}
-
-	client.dtlsConfig = &dtls.Config{
-		ExtendedMasterSecret: dtls.RequireExtendedMasterSecret,
-		PSK:                  client.psk,
-		PSKIdentityHint:      []byte(cfg.PSKIdentity),
-		MTU:                  cfg.MTU,
-		CipherSuites:         cfg.CipherSuites,
-		EllipticCurves:       cfg.EllipticCurves,
-	}
-	if cfg.EnableCID {
-		client.dtlsConfig.ConnectionIDGenerator = dtls.OnlySendCIDGenerator()
 	}
 
 	lc := udp.ListenConfig{
@@ -128,7 +124,7 @@ func (client *Client) serve(conn net.Conn) {
 			return nil, fmt.Errorf("remote dial function failed: %w", err)
 		}
 
-		dtlsConn, err := dtls.Client(remoteConn, remoteAddr, client.dtlsConfig)
+		dtlsConn, err := dtls.Client(remoteConn, remoteAddr, client.opts...)
 		if err != nil {
 			remoteConn.Close()
 			return nil, fmt.Errorf("DTLS connection with remote server failed: %w", err)

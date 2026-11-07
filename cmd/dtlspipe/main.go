@@ -17,10 +17,10 @@ import (
 	"github.com/SenseUnit/dtlspipe/addrgen"
 	"github.com/SenseUnit/dtlspipe/ciphers"
 	"github.com/SenseUnit/dtlspipe/client"
-	"github.com/SenseUnit/dtlspipe/keystore"
 	"github.com/SenseUnit/dtlspipe/server"
 	"github.com/SenseUnit/dtlspipe/util"
 	"github.com/Snawoot/rlzone"
+	"github.com/pion/dtls/v4"
 )
 
 const (
@@ -131,7 +131,7 @@ var (
 	idleTime        = flag.Duration("idle-time", 30*time.Second, "max idle time for UDP session")
 	pskHexOpt       = flag.String("psk", "", "hex-encoded pre-shared key. Can be generated with genpsk subcommand")
 	keyLength       = flag.Uint("key-length", 16, "generate key with specified length")
-	identity        = flag.String("identity", "", "client identity sent to server")
+	identity        = flag.String("identity", "dtlspipe", "client identity sent to server")
 	mtu             = flag.Int("mtu", 1400, "MTU used for DTLS fragments")
 	cpuprofile      = flag.String("cpuprofile", "", "write cpu profile to file")
 	skipHelloVerify = flag.Bool("skip-hello-verify", true, "(server only) skip hello verify request. Useful to workaround DPI")
@@ -243,8 +243,9 @@ func cmdClient(bindAddress, remoteAddress string) int {
 		RemoteDialFunc: util.NewDynDialer(
 			addrgen.SingleEndpoint(remoteAddress).Endpoint,
 		).DialContext,
-		PSKCallback:    keystore.NewStaticKeystore(psk).PSKCallback,
-		PSKIdentity:    *identity,
+		PSKCallback: func() ([]dtls.PSK, error) {
+			return []dtls.PSK{{Identity: []byte(*identity), Key: psk}}, nil
+		},
 		Timeout:        *timeout,
 		IdleTimeout:    *idleTime,
 		BaseContext:    appCtx,
@@ -297,8 +298,9 @@ func cmdHoppingClient(args []string) int {
 				return ep
 			},
 		).DialContext,
-		PSKCallback:    keystore.NewStaticKeystore(psk).PSKCallback,
-		PSKIdentity:    *identity,
+		PSKCallback: func() ([]dtls.PSK, error) {
+			return []dtls.PSK{{Identity: []byte(*identity), Key: psk}}, nil
+		},
 		Timeout:        *timeout,
 		IdleTimeout:    *idleTime,
 		BaseContext:    appCtx,
@@ -335,9 +337,11 @@ func cmdServer(bindAddress, remoteAddress string) int {
 	defer cancel()
 
 	cfg := server.Config{
-		BindAddress:     bindAddress,
-		RemoteAddress:   remoteAddress,
-		PSKCallback:     keystore.NewStaticKeystore(psk).PSKCallback,
+		BindAddress:   bindAddress,
+		RemoteAddress: remoteAddress,
+		PSKCallback: func(identities [][]byte) (*dtls.PSK, error) {
+			return &dtls.PSK{Identity: identities[0], Key: psk}, nil
+		},
 		Timeout:         *timeout,
 		IdleTimeout:     *idleTime,
 		BaseContext:     appCtx,
@@ -363,7 +367,7 @@ func cmdServer(bindAddress, remoteAddress string) int {
 
 func cmdCiphers() int {
 	for _, id := range ciphers.FullCipherList {
-		fmt.Println(ciphers.CipherIDToString(id))
+		fmt.Println(id.String())
 	}
 	return 0
 }
