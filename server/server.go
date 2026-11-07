@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/SenseUnit/dtlspipe/util"
-	"github.com/pion/dtls/v3"
+	"github.com/pion/dtls/v4"
 )
 
 const (
@@ -20,9 +20,7 @@ const (
 type Server struct {
 	listener      net.Listener
 	dialer        *net.Dialer
-	dtlsConfig    *dtls.Config
 	rAddr         string
-	psk           func([]byte) ([]byte, error)
 	timeout       time.Duration
 	idleTimeout   time.Duration
 	baseCtx       context.Context
@@ -42,7 +40,6 @@ func New(cfg *Config) (*Server, error) {
 		dialer:        new(net.Dialer),
 		rAddr:         cfg.RemoteAddress,
 		timeout:       cfg.Timeout,
-		psk:           cfg.PSKCallback,
 		idleTimeout:   cfg.IdleTimeout,
 		baseCtx:       baseCtx,
 		cancelCtx:     cancelCtx,
@@ -57,24 +54,24 @@ func New(cfg *Config) (*Server, error) {
 		return nil, fmt.Errorf("can't parse bind address: %w", err)
 	}
 
-	srv.dtlsConfig = &dtls.Config{
-		ExtendedMasterSecret:    dtls.RequireExtendedMasterSecret,
-		PSK:                     srv.psk,
-		MTU:                     cfg.MTU,
-		InsecureSkipVerifyHello: cfg.SkipHelloVerify,
-		CipherSuites:            cfg.CipherSuites,
-		EllipticCurves:          cfg.EllipticCurves,
-		OnConnectionAttempt: func(a net.Addr) error {
+	opts := []dtls.ServerOption{
+		dtls.WithPSK(nil, cfg.PSKCallback),
+		dtls.WithExtendedMasterSecret(dtls.RequireExtendedMasterSecret),
+		dtls.WithMTU(cfg.MTU),
+		dtls.WithCipherSuites(cfg.CipherSuites...),
+		dtls.WithEllipticCurves(cfg.EllipticCurves...),
+		dtls.WithInsecureSkipVerifyHello(cfg.SkipHelloVerify),
+		dtls.WithOnConnectionAttempt(func(a net.Addr) error {
 			if !srv.allowFunc(a) {
 				return fmt.Errorf("address %s was not allowed by limiter", a.String())
 			}
 			return nil
-		},
+		}),
 	}
 	if cfg.EnableCID {
-		srv.dtlsConfig.ConnectionIDGenerator = dtls.RandomCIDGenerator(8)
+		opts = append(opts, dtls.WithConnectionID(dtls.RandomCIDGenerator(8), dtls.CIDPathMigrationUnsafe))
 	}
-	srv.listener, err = dtls.Listen("udp", net.UDPAddrFromAddrPort(lAddrPort), srv.dtlsConfig)
+	srv.listener, err = dtls.ListenAddr("udp", net.UDPAddrFromAddrPort(lAddrPort), opts...)
 	if err != nil {
 		cancelCtx()
 		return nil, fmt.Errorf("can't initialize DTLS listener: %w", err)

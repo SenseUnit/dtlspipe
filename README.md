@@ -130,7 +130,7 @@ Options:
   -curves value
     	colon-separated list of curves to use
   -identity string
-    	client identity sent to server
+    	client identity sent to server (default "dtlspipe")
   -idle-time duration
     	max idle time for UDP session (default 30s)
   -key-length uint

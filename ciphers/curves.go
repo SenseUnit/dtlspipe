@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pion/dtls/v3/pkg/crypto/elliptic"
+	"github.com/pion/dtls/v4/pkg/crypto/elliptic"
 )
 
 type CurveList = []elliptic.Curve

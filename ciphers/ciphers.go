@@ -4,33 +4,34 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/pion/dtls/v3"
+	"github.com/pion/dtls/v4/pkg/crypto/ciphersuite"
 )
 
-type CipherList = []dtls.CipherSuiteID
+type CipherList = []ciphersuite.ID
 
 var FullCipherList = CipherList{
-	dtls.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
-	dtls.TLS_PSK_WITH_AES_128_CCM,
-	dtls.TLS_PSK_WITH_AES_128_CCM_8,
-	dtls.TLS_PSK_WITH_AES_256_CCM_8,
-	dtls.TLS_PSK_WITH_AES_128_GCM_SHA256,
-	dtls.TLS_PSK_WITH_AES_128_CBC_SHA256,
+	ciphersuite.TLS_PSK_WITH_AES_128_CCM,
+	ciphersuite.TLS_PSK_WITH_AES_128_CCM_8,
+	ciphersuite.TLS_PSK_WITH_AES_256_CCM_8,
+	ciphersuite.TLS_PSK_WITH_AES_128_GCM_SHA256,
+	ciphersuite.TLS_PSK_WITH_AES_128_CBC_SHA256,
+	ciphersuite.TLS_ECDHE_PSK_WITH_AES_128_CBC_SHA256,
+	ciphersuite.TLS_PSK_WITH_CHACHA20_POLY1305_SHA256,
+	ciphersuite.TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256,
+	ciphersuite.TLS_AES_128_GCM_SHA256,
+	ciphersuite.TLS_AES_256_GCM_SHA384,
+	ciphersuite.TLS_CHACHA20_POLY1305_SHA256,
 }
 
 var DefaultCipherList = FullCipherList
 var DefaultCipherListString = CipherListToString(DefaultCipherList)
-var CipherNameToID map[string]dtls.CipherSuiteID
+var CipherNameToID map[string]ciphersuite.ID
 
 func init() {
-	CipherNameToID = make(map[string]dtls.CipherSuiteID)
+	CipherNameToID = make(map[string]ciphersuite.ID)
 	for _, id := range FullCipherList {
-		CipherNameToID[dtls.CipherSuiteName(id)] = id
+		CipherNameToID[id.String()] = id
 	}
-}
-
-func CipherIDToString(id dtls.CipherSuiteID) string {
-	return dtls.CipherSuiteName(id)
 }
 
 func CipherListToString(lst CipherList) string {
@@ -42,7 +43,7 @@ func CipherListToString(lst CipherList) string {
 		} else {
 			firstPrinted = true
 		}
-		b.WriteString(dtls.CipherSuiteName(id))
+		b.WriteString(id.String())
 	}
 	return b.String()
 }

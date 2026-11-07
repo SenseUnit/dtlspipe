@@ -1,13 +1,13 @@
 github.com/Snawoot/rlzone v0.2.0 h1:l/Gl8ncAdCjdalZlE7THD4xlwCnvn6jCF3hsiL4SmWQ=
 github.com/Snawoot/rlzone v0.2.0/go.mod h1:5yK8f9nJSOAPizq2LZ35arkortJhjFx1eO6ckOQCnwQ=
-github.com/pion/dtls/v3 v3.1.9 h1:rpeycmLIkc4krpk1IxP7+39o11QdCXbmV9+FGi9yZJ8=
-github.com/pion/dtls/v3 v3.1.9/go.mod h1:iKFQNYrjsN2TiA2YKKMqB9MOZaFpjFULBI/A4sW0eyc=
+github.com/pion/dtls/v4 v4.0.1 h1:Kf5UJ6/BQ4OwofIa5+CYvt0TbVsSv56L6y6IaF8yvHI=
+github.com/pion/dtls/v4 v4.0.1/go.mod h1:d0wnjVER+gonPBUifSj6ZeGXClyHxYfctzvOELtsNb4=
 github.com/pion/logging v0.2.4 h1:tTew+7cmQ+Mc1pTBLKH2puKsOvhm32dROumOZ655zB8=
 github.com/pion/logging v0.2.4/go.mod h1:DffhXTKYdNZU+KtJ5pyQDjvOAh/GsNSyv1lbkFbe3so=
 github.com/pion/transport/v4 v4.1.1 h1:kEBtbp1sRad0tnkREDNJ3fmop/CR8p/YxXnpFbn9tqo=
 github.com/pion/transport/v4 v4.1.1/go.mod h1:Oxo5oODQvjFF7NkHBBz3f4fZXLB7x03uLVuzfYeA5pE=
-github.com/pion/transport/v5 v5.0.0 h1:XWdfCnG6oLaTp07Sr4lbyWVs+MXuaD3eggUsSn6LK90=
-github.com/pion/transport/v5 v5.0.0/go.mod h1:Qxw6fCEjFWQkRDZOhS4Vf+neJBcihauvA3uyEa1J1F0=
+github.com/pion/transport/v5 v5.1.4 h1:j0E5QIPyv28YnWxa8yE9AyDmrxVnwhZ109c7Dpt48K4=
+github.com/pion/transport/v5 v5.1.4/go.mod h1:Qxw6fCEjFWQkRDZOhS4Vf+neJBcihauvA3uyEa1J1F0=
 github.com/stretchr/testify v1.12.1 h1:EuwCh5fleGS7H32xRwO3wRGT7DxrDhLAT6FF8MpWDWE=
 github.com/stretchr/testify v1.12.1/go.mod h1:MDEgiDPPsNp5cuIrHPPCyornHKgEVbtFUmoNlxoYthg=
 go.yaml.in/yaml/v3 v3.0.5 h1:N6y/pJk8buWs9NY5ERU2HSMfm+IuD/OtfdAnq6kESPw=
