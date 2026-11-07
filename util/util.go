@@ -142,7 +142,9 @@ func AllowByRatelimit(z rlzone.Ratelimiter[netip.Addr]) func(net.Addr) bool {
 		return AllowAllFunc
 	}
 	return func(remoteAddr net.Addr) bool {
-		key := NetAddrToNetipAddrPort(remoteAddr).Addr()
+		a := NetAddrToNetipAddrPort(remoteAddr).Addr().Unmap()
+		p, _ := a.Prefix(min(a.BitLen(), 64))
+		key := p.Addr()
 		return z.Allow(key)
 	}
 }
